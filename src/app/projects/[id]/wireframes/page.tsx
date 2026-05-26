@@ -8,6 +8,7 @@ import { getAIProvider } from '@/lib/ai/ai-client';
 import type { WireframePage, WireframeBlock } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function WireframesPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function WireframesPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [wireframeList, setWireframeList] = useState<WireframePage[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -34,13 +36,21 @@ export default function WireframesPage() {
     // 检查前置条件
     if (!project?.featureTree) {
       console.error('缺少功能结构图，无法生成线框图');
+      setErrorMessage('缺少功能结构图，无法生成线框图。请先在功能结构图页生成并保存功能结构。');
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
       console.error('缺少页面清单，无法生成线框图');
+      setErrorMessage('缺少页面清单，无法生成线框图。请先在页面清单页生成并保存页面范围。');
+      return;
+    }
+    if (!project?.flows || project.flows.length === 0) {
+      console.error('缺少跳转关系，无法生成线框图');
+      setErrorMessage('缺少跳转关系，无法生成线框图。请先在跳转关系页生成并保存页面关系。');
       return;
     }
 
+    setErrorMessage('');
     setIsLoading(true);
     try {
       const ai = getAIProvider();
@@ -208,6 +218,20 @@ export default function WireframesPage() {
 
       {/* 主要内容 */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* 错误提示 */}
+        {errorMessage && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">无法生成线框图</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-amber-700 mb-4">{errorMessage}</p>
+              <Link href={`/projects/${projectId}/flows`}>
+                <Button variant="outline">返回跳转关系</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <p>正在生成线框图...</p>

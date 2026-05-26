@@ -113,6 +113,8 @@ export interface GenerateDevHandoffParams {
   pageList: ProductPage[];
   /** 流程列表 */
   flows: ProductFlow[];
+  /** PRD 内容 */
+  prd: string;
   /** 项目信息 */
   project: Partial<Project>;
 }

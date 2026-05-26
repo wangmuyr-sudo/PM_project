@@ -7,6 +7,7 @@ import { useProjectStore, useProjectById } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HandoffPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function HandoffPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [devHandoffContent, setDevHandoffContent] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -34,25 +36,31 @@ export default function HandoffPage() {
     // 检查前置条件
     if (!project?.featureTree) {
       console.error('缺少功能结构图，无法生成研发说明');
+      setErrorMessage('缺少功能结构图，无法生成研发说明。请先在功能结构图页生成并保存功能结构。');
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
       console.error('缺少页面清单，无法生成研发说明');
+      setErrorMessage('缺少页面清单，无法生成研发说明。请先在页面清单页生成并保存页面范围。');
       return;
     }
     if (!project?.flows || project.flows.length === 0) {
       console.error('缺少跳转关系，无法生成研发说明');
+      setErrorMessage('缺少跳转关系，无法生成研发说明。请先在跳转关系页生成并保存页面关系。');
       return;
     }
     if (!project?.wireframes || project.wireframes.length === 0) {
       console.error('缺少线框图，无法生成研发说明');
+      setErrorMessage('缺少线框图，无法生成研发说明。请先在线框图页生成页面结构草图。');
       return;
     }
     if (!project?.prd || project.prd.length === 0) {
       console.error('缺少 PRD，无法生成研发说明');
+      setErrorMessage('缺少 PRD，无法生成研发说明。请先在 PRD 页生成产品需求文档。');
       return;
     }
 
+    setErrorMessage('');
     setIsLoading(true);
     try {
       const ai = getAIProvider();
@@ -60,6 +68,7 @@ export default function HandoffPage() {
         featureTree: project.featureTree,
         pageList: project.pageList,
         flows: project.flows,
+        prd: project.prd,
         project: { name: project.name },
       });
       setDevHandoffContent(devHandoff);
@@ -397,6 +406,20 @@ export default function HandoffPage() {
 
       {/* 主要内容 */}
       <main className="max-w-5xl mx-auto px-6 py-8">
+        {/* 错误提示 */}
+        {errorMessage && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">无法生成研发说明</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-amber-700 mb-4">{errorMessage}</p>
+              <Link href={`/projects/${projectId}/prd`}>
+                <Button variant="outline">返回 PRD</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
         {/* 研发说明说明 */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <p className="text-sm text-blue-800">

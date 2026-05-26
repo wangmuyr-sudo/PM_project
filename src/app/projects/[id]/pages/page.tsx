@@ -22,6 +22,7 @@ export default function PagesPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [pageList, setPageList] = useState<ProductPage[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -35,13 +36,15 @@ export default function PagesPage() {
   }, [projectId, setCurrentProject]);
 
   const generatePageList = async () => {
+    if (!project?.featureTree) {
+      console.error('缺少功能结构图，无法生成页面清单');
+      setErrorMessage('缺少功能结构图，无法生成页面清单。请先在功能结构图页生成并保存功能结构。');
+      return;
+    }
+
+    setErrorMessage('');
     setIsLoading(true);
     try {
-      if (!project?.featureTree) {
-        console.error('缺少功能结构图，无法生成页面清单');
-        return;
-      }
-
       const ai = getAIProvider();
       const pages = await ai.generatePageList({
         featureTree: project.featureTree,
@@ -137,6 +140,20 @@ export default function PagesPage() {
       
       {/* 主要内容 */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* 错误提示 */}
+        {errorMessage && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">无法生成页面清单</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-amber-700 mb-4">{errorMessage}</p>
+              <Link href={`/projects/${projectId}/structure`}>
+                <Button variant="outline">返回功能结构图</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <p>正在生成页面清单...</p>

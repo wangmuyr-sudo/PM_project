@@ -21,6 +21,7 @@ export default function FlowsPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [flowList, setFlowList] = useState<ProductFlow[]>([]);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     setMounted(true);
@@ -37,13 +38,16 @@ export default function FlowsPage() {
     // 检查前置条件
     if (!project?.featureTree) {
       console.error('缺少功能结构图，无法生成跳转关系');
+      setErrorMessage('缺少功能结构图，无法生成跳转关系。请先在功能结构图页生成并保存功能结构。');
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
       console.error('缺少页面清单，无法生成跳转关系');
+      setErrorMessage('缺少页面清单，无法生成跳转关系。请先在页面清单页生成并保存页面范围。');
       return;
     }
 
+    setErrorMessage('');
     setIsLoading(true);
     try {
       const ai = getAIProvider();
@@ -52,8 +56,13 @@ export default function FlowsPage() {
         pageList: project.pageList,
       });
       setFlowList(flows);
-      // 保存到 Store
-      updateProject(projectId, { flows });
+      // 保存到 Store，同时清空下游交付物
+      updateProject(projectId, {
+        flows,
+        wireframes: undefined,
+        prd: undefined,
+        devHandoff: undefined,
+      });
     } catch (error) {
       console.error('生成跳转关系失败:', error);
     } finally {
@@ -215,6 +224,20 @@ export default function FlowsPage() {
 
       {/* 主要内容 */}
       <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* 错误提示 */}
+        {errorMessage && (
+          <Card className="mb-6 border-amber-200 bg-amber-50">
+            <CardHeader>
+              <CardTitle className="text-amber-800">无法生成跳转关系</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-amber-700 mb-4">{errorMessage}</p>
+              <Link href={`/projects/${projectId}/pages`}>
+                <Button variant="outline">返回页面清单</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <p>正在生成跳转关系...</p>
