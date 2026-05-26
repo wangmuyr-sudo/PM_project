@@ -221,6 +221,12 @@ export class MockAIProvider implements AIProvider {
         pageName: '我的预约页',
         blocks: this.createMyBookingsBlocks(),
       },
+      {
+        id: 'wireframe-6',
+        pageId: 'page-6',
+        pageName: '个人中心',
+        blocks: this.createPersonalCenterBlocks(),
+      },
     ];
 
     return wireframes;
@@ -889,6 +895,19 @@ interface Appointment {
       { id: 'b2', type: 'tabs', title: '状态筛选', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
       { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
         { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '改约', '详情'] },
+      ]},
+      { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
+    ];
+  }
+
+  private createPersonalCenterBlocks(): WireframeBlock[] {
+    return [
+      { id: 'b1', type: 'header', title: '顶部标题', description: '个人中心' },
+      { id: 'b2', type: 'card', title: '用户信息', description: '用户头像和昵称', fields: ['头像', '昵称', '手机号'] },
+      { id: 'b3', type: 'list', title: '功能入口', description: '常用功能入口', children: [
+        { id: 'b3-1', type: 'card', title: '我的预约', actions: ['查看'] },
+        { id: 'b3-2', type: 'card', title: '我的收藏', actions: ['查看'] },
+        { id: 'b3-3', type: 'card', title: '设置', actions: ['查看'] },
       ]},
       { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
     ];
