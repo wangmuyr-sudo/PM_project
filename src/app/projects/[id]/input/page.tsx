@@ -69,6 +69,19 @@ export default function InputPage() {
   // 判断是否有输入内容（文本框有内容、或有已保存的文字资料、或有上传的图片）
   const hasInput = textInput.trim().length > 0 || textSources.length > 0 || imageSources.length > 0;
 
+  // inputSources 变更后，清空旧的分析结果和下游交付物
+  const invalidateAfterInputSourcesChange = () => {
+    updateProject(projectId, {
+      productUnderstanding: undefined,
+      featureTree: undefined,
+      pageList: undefined,
+      flows: undefined,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
+  };
+
   // 处理图片上传
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -92,6 +105,7 @@ export default function InputPage() {
             name: file.name,
             previewUrl,
           });
+          invalidateAfterInputSourcesChange();
           setUploadingFiles((prev) => prev.filter((id) => id !== fileId));
         };
         reader.readAsDataURL(file);
@@ -110,6 +124,7 @@ export default function InputPage() {
   // 删除输入源
   const handleRemoveSource = (sourceId: string) => {
     removeInputSource(projectId, sourceId);
+    invalidateAfterInputSourcesChange();
   };
 
   // 开始分析
@@ -121,13 +136,24 @@ export default function InputPage() {
     try {
       const ai = getAIProvider();
 
-      // 如果文本框有内容，先保存到 inputSources
-      if (textInput.trim()) {
+      // 合并已保存文字资料和当前 textarea 新输入内容
+      const savedTextContents = textSources.map((s) => s.content);
+      const newTextContent = textInput.trim();
+
+      // 如果 textarea 有新内容，检查是否已存在，避免重复保存
+      if (newTextContent && !savedTextContents.includes(newTextContent)) {
         addInputSource(projectId, {
           type: 'text',
-          content: textInput.trim(),
+          content: newTextContent,
         });
       }
+
+      // 合并所有文字资料用于 AI 分析
+      const allTextContents = [
+        ...savedTextContents,
+        ...(newTextContent && !savedTextContents.includes(newTextContent) ? [newTextContent] : []),
+      ];
+      const combinedText = allTextContents.join('\n\n');
 
       // 调用 AI 分析
       const understanding = await ai.analyzeInput({
@@ -135,9 +161,9 @@ export default function InputPage() {
         platform: project.platform,
         industry: project.industry,
         description: project.description,
-        textInput: textInput.trim() || undefined,
-        screenshotDescriptions: imageSources.length > 0 
-          ? [`已上传 ${imageSources.length} 张截图`] 
+        textInput: combinedText || undefined,
+        screenshotDescriptions: imageSources.length > 0
+          ? [`已上传 ${imageSources.length} 张截图`]
           : undefined,
       });
 
@@ -153,6 +179,9 @@ export default function InputPage() {
         prd: undefined,
         devHandoff: undefined,
       });
+
+      // 清空 textarea
+      setTextInput('');
 
       // 跳转到分析结果页
       router.push(`/projects/${projectId}/analysis`);

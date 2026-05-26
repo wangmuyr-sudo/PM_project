@@ -60,8 +60,11 @@ export default function PRDPage() {
         project: { name: project.name },
       });
       setPrdContent(prd);
-      // 保存到 Store
-      updateProject(projectId, { prd });
+      // 保存到 Store，同时清空下游研发说明
+      updateProject(projectId, {
+        prd,
+        devHandoff: undefined,
+      });
     } catch (error) {
       console.error('生成 PRD 失败:', error);
     } finally {
@@ -82,7 +85,10 @@ export default function PRDPage() {
   }, [project, generatePRD]);
 
   const handleSave = () => {
-    updateProject(projectId, { prd: prdContent });
+    updateProject(projectId, {
+      prd: prdContent,
+      devHandoff: undefined,
+    });
   };
 
   const handleCopy = async () => {

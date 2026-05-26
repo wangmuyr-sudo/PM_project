@@ -126,7 +126,7 @@ export default function HandoffPage() {
       flows: project.flows,
       wireframes: project.wireframes,
       prd: project.prd,
-      devHandoff: project.devHandoff,
+      devHandoff: devHandoffContent || project.devHandoff,
     };
 
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8' });

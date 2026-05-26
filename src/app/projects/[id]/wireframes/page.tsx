@@ -49,8 +49,12 @@ export default function WireframesPage() {
         pageList: project.pageList,
       });
       setWireframeList(wireframes);
-      // 保存到 Store
-      updateProject(projectId, { wireframes });
+      // 保存到 Store，同时清空下游 PRD 和研发说明
+      updateProject(projectId, {
+        wireframes,
+        prd: undefined,
+        devHandoff: undefined,
+      });
     } catch (error) {
       console.error('生成线框图失败:', error);
     } finally {
@@ -71,7 +75,11 @@ export default function WireframesPage() {
   }, [project, generateWireframes]);
 
   const handleSave = () => {
-    updateProject(projectId, { wireframes: wireframeList });
+    updateProject(projectId, {
+      wireframes: wireframeList,
+      prd: undefined,
+      devHandoff: undefined,
+    });
   };
 
   if (!mounted) {

@@ -25,16 +25,16 @@ function getContinuePath(project: Project): string {
   if (!project.featureTree) {
     return `/projects/${project.id}/analysis`;
   }
-  // 有功能结构图但没有页面清单 -> 功能结构图页
-  if (!project.pageList) {
+  // 有功能结构图但没有页面清单或页面清单为空 -> 功能结构图页
+  if (!project.pageList || project.pageList.length === 0) {
     return `/projects/${project.id}/structure`;
   }
-  // 有页面清单但没有跳转关系 -> 页面清单页
-  if (!project.flows) {
+  // 有页面清单但没有跳转关系或跳转关系为空 -> 页面清单页
+  if (!project.flows || project.flows.length === 0) {
     return `/projects/${project.id}/pages`;
   }
-  // 有跳转关系但没有线框图 -> 跳转关系页
-  if (!project.wireframes) {
+  // 有跳转关系但没有线框图或线框图为空 -> 跳转关系页
+  if (!project.wireframes || project.wireframes.length === 0) {
     return `/projects/${project.id}/flows`;
   }
   // 有线框图但没有 PRD -> 线框图页

@@ -47,8 +47,14 @@ export default function PagesPage() {
         featureTree: project.featureTree,
       });
       setPageList(pages);
-      // 保存到 Store
-      updateProject(projectId, { pageList: pages });
+      // 保存到 Store，同时清空下游交付物
+      updateProject(projectId, {
+        pageList: pages,
+        flows: undefined,
+        wireframes: undefined,
+        prd: undefined,
+        devHandoff: undefined,
+      });
     } catch (error) {
       console.error('生成页面清单失败:', error);
     } finally {
