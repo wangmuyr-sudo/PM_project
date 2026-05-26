@@ -203,7 +203,7 @@ export default function StructurePage() {
   });
 
   // 新增节点表单状态
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [addMode, setAddMode] = useState<'root' | 'child' | null>(null);
   const [addForm, setAddForm] = useState({
     name: '',
     type: 'module' as FeatureNodeType,
@@ -374,8 +374,7 @@ export default function StructurePage() {
   // 新增根节点
   const handleAddRootNode = () => {
     if (!addForm.name.trim()) return;
-    const newNode: FeatureNode = {
-      id: `node-${Date.now()}`,
+    const newNode: Omit<FeatureNode, 'id'> = {
       name: addForm.name.trim(),
       type: addForm.type,
       presentationType: addForm.presentationType,
@@ -391,15 +390,14 @@ export default function StructurePage() {
       setExpandedNodes((prev) => new Set([...prev, addedNode.id]));
     }
     setAddForm({ name: '', type: 'module', presentationType: 'inline' });
-    setShowAddForm(false);
+    setAddMode(null);
     invalidateAfterFeatureTreeChange();
   };
 
   // 新增子节点
   const handleAddChildNode = () => {
     if (!selectedNodeId || !addForm.name.trim()) return;
-    const newNode: FeatureNode = {
-      id: `node-${Date.now()}`,
+    const newNode: Omit<FeatureNode, 'id'> = {
       name: addForm.name.trim(),
       type: addForm.type,
       presentationType: addForm.presentationType,
@@ -415,7 +413,7 @@ export default function StructurePage() {
       setExpandedNodes((prev) => new Set([...prev, selectedNodeId, addedNode.id]));
     }
     setAddForm({ name: '', type: 'module', presentationType: 'inline' });
-    setShowAddForm(false);
+    setAddMode(null);
     invalidateAfterFeatureTreeChange();
   };
 
@@ -494,7 +492,7 @@ export default function StructurePage() {
             <div className="flex items-center justify-between">
               <h2 className="font-medium text-sm">功能结构树</h2>
               <div className="flex gap-1">
-                <Button variant="ghost" size="sm" className="h-7 text-xs text-green-600" onClick={() => setShowAddForm(true)}>
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-green-600" onClick={() => setAddMode('root')}>
                   + 新增根节点
                 </Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={expandAllNodes}>
@@ -527,7 +525,7 @@ export default function StructurePage() {
           )}
 
           <div className="flex-1 overflow-auto p-2">
-            {showAddForm && (
+            {addMode === 'root' && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 space-y-3">
                 <div className="text-sm font-medium text-green-700">新增根节点</div>
                 <Input
@@ -572,7 +570,7 @@ export default function StructurePage() {
                   <Button size="sm" className="h-7 text-xs flex-1" onClick={handleAddRootNode}>
                     确定新增
                   </Button>
-                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMode(null); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
                     取消
                   </Button>
                 </div>
@@ -744,7 +742,7 @@ export default function StructurePage() {
                 <Button
                   variant="outline"
                   className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                  onClick={() => setShowAddForm(true)}
+                  onClick={() => setAddMode('child')}
                 >
                   + 新增子节点
                 </Button>
@@ -759,7 +757,7 @@ export default function StructurePage() {
                 </Button>
 
                 {/* 新增子节点表单 */}
-                {showAddForm && selectedNode && (
+                {addMode === 'child' && selectedNode && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
                     <div className="text-sm font-medium text-green-700">新增子节点</div>
                     <Input
@@ -804,7 +802,7 @@ export default function StructurePage() {
                       <Button size="sm" className="h-7 text-xs flex-1" onClick={handleAddChildNode}>
                         确定新增
                       </Button>
-                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMode(null); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
                         取消
                       </Button>
                     </div>
