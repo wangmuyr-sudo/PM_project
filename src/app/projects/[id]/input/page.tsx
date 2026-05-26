@@ -197,13 +197,17 @@ export default function InputPage() {
         </Card>
 
         {/* Input Section */}
+        <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
+          不需要写完整 PRD。先把已有想法、页面清单、功能描述、截图或 AI 结果放进来，下一步会整理成产品理解。
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Text Input */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                文本需求
+                文字资料
               </CardTitle>
               <CardDescription>
                 输入产品需求描述、功能说明或想法
@@ -211,10 +215,10 @@ export default function InputPage() {
             </CardHeader>
             <CardContent>
               <Textarea
-                placeholder="例如：&#10;我要做一个中医预约小程序。&#10;页面有：首页、医生列表页、医生详情页、预约确认页、我的预约页、个人中心。&#10;医生列表页需要搜索框、科室筛选、医生卡片、评分、擅长领域、预约按钮。"
+                placeholder="直接粘贴你的想法、页面清单、功能说明、已有页面描述或 AI 生成结果。比如：首页包含 banner、医生列表、预约入口；医生详情页包含医生信息、可预约时间、评价和预约按钮。"
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
-                rows={8}
+                rows={12}
                 className="resize-none"
               />
             </CardContent>

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
-import type { ProductFlow } from '@/lib/types';
+import type { ProductFlow, FlowType } from '@/lib/types';
 import { groupFlowsByType } from '@/lib/types/flow';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,7 +74,19 @@ export default function FlowsPage() {
   }, [project, generateFlows]);
 
   const handleSave = () => {
-    updateProject(projectId, { flows: flowList });
+    updateProject(projectId, {
+      flows: flowList,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
+  };
+
+  // 更新流程状态
+  const updateFlowStatus = (flowId: string, newType: FlowType) => {
+    setFlowList((prev) =>
+      prev.map((flow) => (flow.id === flowId ? { ...flow, type: newType } : flow))
+    );
   };
 
   if (!mounted) {
@@ -108,6 +120,13 @@ export default function FlowsPage() {
     }
   };
 
+  const getStatusOptions = (): { value: FlowType; label: string }[] => [
+    { value: 'recognized', label: '已识别' },
+    { value: 'assumed', label: '推测' },
+    { value: 'pending', label: '待确认' },
+    { value: 'later', label: '后续版本' },
+  ];
+
   const renderFlowSection = (title: string, flows: ProductFlow[]) => {
     if (flows.length === 0) return null;
 
@@ -120,20 +139,44 @@ export default function FlowsPage() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <span className="font-medium">{flow.name}</span>
                       <Badge className={getConfidenceColor(flow.confidence)}>
-                        {flow.confidence === 'high' ? '高' : flow.confidence === 'medium' ? '中' : '低'}
+                        置信度：{flow.confidence === 'high' ? '高' : flow.confidence === 'medium' ? '中' : '低'}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">{flow.from}</span>
-                      <span className="text-gray-400">→</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-700 rounded">{flow.trigger}</span>
-                      <span className="text-gray-400">→</span>
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">{flow.to}</span>
+                    <div className="grid grid-cols-3 gap-3 mb-3 text-sm">
+                      <div>
+                        <span className="text-gray-500">来源页面：</span>
+                        <span className="font-medium">{flow.from}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">触发动作：</span>
+                        <span className="font-medium">{flow.trigger}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">目标页面：</span>
+                        <span className="font-medium">{flow.to}</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-500">{flow.description}</p>
+                    <div className="mb-2">
+                      <span className="text-gray-500 text-sm">流程说明：</span>
+                      <p className="text-sm text-gray-700 mt-1">{flow.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-gray-500">状态确认</span>
+                    <select
+                      value={flow.type}
+                      onChange={(e) => updateFlowStatus(flow.id, e.target.value as FlowType)}
+                      className="text-xs border rounded px-1 py-1"
+                    >
+                      {getStatusOptions().map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </CardContent>
@@ -172,6 +215,13 @@ export default function FlowsPage() {
           </div>
         ) : (
           <div>
+            {/* 说明文案 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-700">
+                请确认页面之间的来源、触发动作和目标页面是否正确，重点检查推测和待确认流程。
+              </p>
+            </div>
+
             {/* 流程统计 */}
             <div className="flex items-center gap-4 mb-6">
               <Badge variant="outline" className="text-base px-3 py-1">
@@ -186,6 +236,9 @@ export default function FlowsPage() {
               <Badge className="bg-gray-500 text-base px-3 py-1">
                 待确认: {groupedFlows.pending.length}
               </Badge>
+              <Badge className="bg-slate-400 text-base px-3 py-1">
+                后续: {groupedFlows.later?.length || 0}
+              </Badge>
             </div>
 
             {/* 已识别流程 */}
@@ -196,6 +249,9 @@ export default function FlowsPage() {
 
             {/* 待确认流程 */}
             {renderFlowSection('待确认流程', groupedFlows.pending)}
+
+            {/* 后续版本流程 */}
+            {renderFlowSection('后续版本', groupedFlows.later || [])}
 
             {flowList.length === 0 && (
               <div className="text-center py-12 text-gray-500">

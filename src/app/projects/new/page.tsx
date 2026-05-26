@@ -115,7 +115,7 @@ export default function NewProjectPage() {
           <CardHeader>
             <CardTitle>创建新项目</CardTitle>
             <CardDescription>
-              填写产品基本信息，开始整理您的产品资产
+              填写产品基本信息，下一步继续输入想法、截图或页面资料，用于整理产品交付资产。
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -196,7 +196,7 @@ export default function NewProjectPage() {
                 <Label htmlFor="description">产品描述</Label>
                 <Textarea
                   id="description"
-                  placeholder="简要描述产品的核心功能和目标用户..."
+                  placeholder="例如：这是一个中医预约小程序，用户可以查看医生、预约问诊、查看订单和支付记录。"
                   value={formData.description}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
@@ -204,7 +204,7 @@ export default function NewProjectPage() {
                   rows={4}
                 />
                 <p className="text-xs text-gray-500">
-                  可以在后续步骤中补充更详细的需求说明
+                  这里只需要简单描述，详细想法、截图、已有页面可以在下一步继续补充。
                 </p>
               </div>
 
@@ -229,7 +229,7 @@ export default function NewProjectPage() {
                       创建中...
                     </>
                   ) : (
-                    '创建项目'
+                    '创建并继续输入资料'
                   )}
                 </Button>
               </div>

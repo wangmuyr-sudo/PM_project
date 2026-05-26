@@ -206,6 +206,25 @@ export default function WireframesPage() {
           </div>
         ) : (
           <div>
+            {/* 说明文案 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-700">
+                请确认每个页面的结构、字段和关键操作是否完整，线框图仅用于评审页面结构，不代表最终 UI。
+              </p>
+            </div>
+
+            {/* 页面索引 */}
+            <div className="mb-6">
+              <div className="text-sm text-gray-500 mb-2">页面索引：</div>
+              <div className="flex flex-wrap gap-2">
+                {wireframeList.map((wireframe, index) => (
+                  <Badge key={wireframe.id} variant="outline" className="text-sm px-3 py-1">
+                    {index + 1}. {wireframe.pageName}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
             {/* 统计 */}
             <div className="flex items-center gap-4 mb-6">
               <Badge variant="outline" className="text-base px-3 py-1">

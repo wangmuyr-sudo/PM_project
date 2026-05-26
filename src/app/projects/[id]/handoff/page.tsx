@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function HandoffPage() {
   const params = useParams();
@@ -387,12 +388,64 @@ export default function HandoffPage() {
             </Button>
             <Button onClick={handleExport} variant="outline">导出 Markdown</Button>
             <Button onClick={handleExportJSON} variant="outline">导出完整项目 JSON</Button>
+            <Button onClick={generateDevHandoff} disabled={isLoading} variant="outline">
+              {isLoading ? '正在重新生成...' : '重新生成研发说明'}
+            </Button>
           </div>
         </div>
       </header>
 
       {/* 主要内容 */}
       <main className="max-w-5xl mx-auto px-6 py-8">
+        {/* 研发说明说明 */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-sm text-blue-800">
+            这份研发说明用于帮助研发理解页面、模块、字段、操作、接口和 Mock 边界，不是 PRD 的重复版本。
+          </p>
+        </div>
+
+        {/* 研发说明完整性检查 */}
+        {(() => {
+          const requiredChapters = [
+            '页面总览',
+            '页面与模块说明',
+            '字段说明',
+            '操作与跳转',
+            '状态与异常',
+            '接口建议',
+            'Mock 数据建议',
+            'MVP 范围',
+            '后续版本范围',
+            '研发注意事项',
+          ];
+          const found = requiredChapters.filter((c) => devHandoffContent.includes(c));
+          const missing = requiredChapters.filter((c) => !devHandoffContent.includes(c));
+          return (
+            <div className="bg-white rounded-lg border p-4 mb-6 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-medium">研发说明完整性检查</h2>
+                <span className="text-sm text-gray-500">
+                  已包含 {found.length} / {requiredChapters.length} 个章节
+                </span>
+              </div>
+              {missing.length === 0 ? (
+                <p className="text-sm text-green-600">✅ 研发说明章节完整，所有 10 个章节均已包含</p>
+              ) : (
+                <div>
+                  <p className="text-sm text-amber-600 mb-2">⚠️ 缺少以下章节：</p>
+                  <div className="flex flex-wrap gap-1">
+                    {missing.map((chapter) => (
+                      <Badge key={chapter} variant="outline" className="text-xs text-amber-600 border-amber-300">
+                        {chapter}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <p>正在生成研发说明...</p>

@@ -1,7 +1,7 @@
 /**
  * 流程类型
  */
-export type FlowType = "recognized" | "assumed" | "pending";
+export type FlowType = "recognized" | "assumed" | "pending" | "later";
 
 /**
  * 置信度
@@ -35,6 +35,7 @@ export function groupFlowsByType(
     recognized: flows.filter((f) => f.type === "recognized"),
     assumed: flows.filter((f) => f.type === "assumed"),
     pending: flows.filter((f) => f.type === "pending"),
+    later: flows.filter((f) => f.type === "later"),
   };
 }
 

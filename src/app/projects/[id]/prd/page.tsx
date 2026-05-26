@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export default function PRDPage() {
   const params = useParams();
@@ -121,6 +122,34 @@ export default function PRDPage() {
       </div>
     );
   }
+
+  // PRD 章节完整性检查
+  const requiredChapters = [
+    '产品概述',
+    '目标用户',
+    '业务目标',
+    'MVP 范围',
+    '后续版本范围',
+    '页面清单',
+    '页面说明',
+    '模块说明',
+    '字段说明',
+    '按钮操作说明',
+    '页面跳转关系',
+    '状态说明',
+    '弹窗',
+    '异常状态',
+    '待确认事项',
+    '研发注意事项',
+  ];
+
+  const checkPRDCompleteness = (content: string): { found: string[]; missing: string[] } => {
+    const found = requiredChapters.filter((chapter) => content.includes(chapter));
+    const missing = requiredChapters.filter((chapter) => !content.includes(chapter));
+    return { found, missing };
+  };
+
+  const completeness = checkPRDCompleteness(prdContent);
 
   // 简单的 Markdown 渲染
   const renderMarkdown = (content: string) => {
@@ -353,6 +382,9 @@ export default function PRDPage() {
               {copySuccess ? '已复制' : '复制 PRD'}
             </Button>
             <Button onClick={handleExport} variant="outline">导出 Markdown</Button>
+            <Button onClick={generatePRD} disabled={isLoading} variant="outline">
+              {isLoading ? '正在重新生成...' : '重新生成 PRD'}
+            </Button>
             <Link href={`/projects/${projectId}/handoff`}>
               <Button>下一步：生成研发说明</Button>
             </Link>
@@ -367,10 +399,36 @@ export default function PRDPage() {
             <p>正在生成 PRD...</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg border p-8 shadow-sm">
-            <article className="prose prose-gray max-w-none">
-              {renderMarkdown(prdContent)}
-            </article>
+          <div>
+            {/* PRD 完整性检查 */}
+            <div className="bg-white rounded-lg border p-4 mb-6 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-medium">PRD 完整性检查</h2>
+                <span className="text-sm text-gray-500">
+                  已包含 {completeness.found.length} / {requiredChapters.length} 个章节
+                </span>
+              </div>
+              {completeness.missing.length === 0 ? (
+                <p className="text-sm text-green-600">✅ PRD 章节完整，所有 16 个章节均已包含</p>
+              ) : (
+                <div>
+                  <p className="text-sm text-amber-600 mb-2">⚠️ 缺少以下章节：</p>
+                  <div className="flex flex-wrap gap-1">
+                    {completeness.missing.map((chapter) => (
+                      <Badge key={chapter} variant="outline" className="text-xs text-amber-600 border-amber-300">
+                        {chapter}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg border p-8 shadow-sm">
+              <article className="prose prose-gray max-w-none">
+                {renderMarkdown(prdContent)}
+              </article>
+            </div>
           </div>
         )}
       </main>

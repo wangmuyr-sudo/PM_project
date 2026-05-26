@@ -135,7 +135,9 @@ export default function AnalysisPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">产品理解分析结果</h1>
           <p className="mt-2 text-gray-600">
-            AI 已分析您输入的资料，以下是识别出的产品结构
+            请先确认 AI 对产品目标、用户、场景、页面和模块的理解是否正确；</p>
+          <p className="mt-1 text-gray-600">
+            如果有偏差，返回输入资料补充后再继续生成交付资产。
           </p>
         </div>
 
@@ -212,6 +214,7 @@ export default function AnalysisPage() {
               <CardTitle className="flex items-center gap-2 text-base">
                 <FileText className="h-5 w-5 text-blue-500" />
                 识别出的页面
+                <Badge variant="outline" className="ml-2 border-green-500 text-green-600">已识别</Badge>
               </CardTitle>
               <CardDescription>
                 从输入资料中识别出的核心页面
@@ -234,6 +237,7 @@ export default function AnalysisPage() {
               <CardTitle className="flex items-center gap-2 text-base">
                 <Layers className="h-5 w-5 text-violet-500" />
                 识别出的模块
+                <Badge variant="outline" className="ml-2 border-green-500 text-green-600">已识别</Badge>
               </CardTitle>
               <CardDescription>
                 从输入资料中识别出的功能模块
@@ -264,11 +268,7 @@ export default function AnalysisPage() {
                   {confidenceConfig.label}置信度
                 </Badge>
                 <p className="mt-3 text-sm text-gray-600">
-                  {understanding.confidence === 'high' 
-                    ? '分析结果较为确定，可以直接进入下一步'
-                    : understanding.confidence === 'medium'
-                    ? '部分内容需要确认，建议检查假设项'
-                    : '分析结果不确定，请仔细核对假设项'}
+                  已识别出主要页面和核心预约流程，但支付、改约、通知等业务规则仍需确认。
                 </p>
               </CardContent>
             </Card>
@@ -277,10 +277,10 @@ export default function AnalysisPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <AlertCircle className="h-5 w-5 text-amber-500" />
-                  假设项
+                  待确认假设项
                 </CardTitle>
                 <CardDescription>
-                  AI 推测的内容，需要您确认
+                  这些问题会影响后续功能结构图、页面清单、PRD 和研发说明
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -294,7 +294,7 @@ export default function AnalysisPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-gray-500">暂无假设项</p>
+                  <p className="text-sm text-gray-500">暂无待确认假设项</p>
                 )}
               </CardContent>
             </Card>

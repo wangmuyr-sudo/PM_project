@@ -23,6 +23,9 @@ export default function HomePage() {
           <p className="mt-4 text-lg text-gray-600 sm:text-xl">
             把混乱页面整理成可评审、可交付、研发能接手的产品资产。
           </p>
+          <p className="mt-2 text-sm text-gray-500">
+            不是生成 UI，而是把想法、截图和页面结果整理成产品经理可评审、研发可接手的交付资产。
+          </p>
           
           {/* Core Value */}
           <div className="mt-8 flex flex-wrap justify-center gap-6">

@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import type { FeatureNode, FeatureNodeType, PresentationType, NodeStatus, ConfidenceLevel, ConfirmQuestion } from '@/lib/types';
-import { findNodeById, flattenNodes } from '@/lib/types/feature-tree';
+import { findNodeById, flattenNodes, countNodesByType } from '@/lib/types/feature-tree';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -243,6 +243,40 @@ export default function StructurePage() {
     return findNodeById(project.featureTree.nodes, selectedNodeId);
   }, [project?.featureTree?.nodes, selectedNodeId]);
 
+  // 计算功能范围统计
+  const scopeStats = useMemo(() => {
+    if (!project?.featureTree) return null;
+    const nodes = project.featureTree.nodes;
+    const typeCounts = countNodesByType(nodes);
+
+    // 递归统计状态
+    const countByStatus = (nodes: FeatureNode[]): Record<NodeStatus, number> => {
+      const counts: Record<NodeStatus, number> = { confirmed: 0, pending: 0, optional: 0, later: 0 };
+      const traverse = (node: FeatureNode) => {
+        counts[node.status]++;
+        node.children?.forEach(traverse);
+      };
+      nodes.forEach(traverse);
+      return counts;
+    };
+
+    const statusCounts = countByStatus(nodes);
+
+    return {
+      total: flattenNodes(nodes).length,
+      page: typeCounts.page,
+      module: typeCounts.module,
+      field: typeCounts.field,
+      action: typeCounts.action,
+      modal: typeCounts.modal + typeCounts['bottom-sheet'] + typeCounts.drawer,
+      state: typeCounts.state,
+      rule: typeCounts.rule,
+      pending: statusCounts.pending,
+      optional: statusCounts.optional,
+      later: statusCounts.later,
+    };
+  }, [project?.featureTree]);
+
   // 当选中节点变化时，更新表单
   useEffect(() => {
     if (selectedNode) {
@@ -381,6 +415,26 @@ export default function StructurePage() {
               </div>
             </div>
           </div>
+
+          {/* 功能范围统计 */}
+          {scopeStats && (
+            <div className="px-4 py-2 border-b bg-blue-50">
+              <div className="text-xs text-blue-700 font-medium mb-1.5">功能范围</div>
+              <div className="grid grid-cols-3 gap-x-3 gap-y-0.5 text-xs">
+                <span>页面 <span className="font-medium">{scopeStats.page}</span></span>
+                <span>模块 <span className="font-medium">{scopeStats.module}</span></span>
+                <span>字段 <span className="font-medium">{scopeStats.field}</span></span>
+                <span>操作 <span className="font-medium">{scopeStats.action}</span></span>
+                <span>弹层 <span className="font-medium">{scopeStats.modal}</span></span>
+                <span>状态 <span className="font-medium">{scopeStats.state}</span></span>
+                <span>规则 <span className="font-medium">{scopeStats.rule}</span></span>
+                <span className="text-amber-600">待确认 <span className="font-medium">{scopeStats.pending}</span></span>
+                <span className="text-slate-500">可选 <span className="font-medium">{scopeStats.optional}</span></span>
+                <span className="text-slate-500">后续 <span className="font-medium">{scopeStats.later}</span></span>
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-auto p-2">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
