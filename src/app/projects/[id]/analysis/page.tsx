@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useCurrentProject, useProjectStore } from '@/lib/store/project-store';
+import { useProjectById, useProjectStore } from '@/lib/store/project-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ export default function AnalysisPage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const project = useCurrentProject();
+  const project = useProjectById(projectId);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
 
   // 确保当前项目ID设置正确

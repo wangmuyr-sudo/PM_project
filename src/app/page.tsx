@@ -2,11 +2,52 @@
 
 import Link from 'next/link';
 import { useProjects, useProjectStore } from '@/lib/store/project-store';
+import type { Project } from '@/lib/types';
 import { formatDistanceToNow } from '@/lib/utils/date';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Plus, ArrowRight, Layers, GitBranch, FileCode } from 'lucide-react';
+
+/**
+ * 根据项目已有数据，返回继续编辑的路径
+ */
+function getContinuePath(project: Project): string {
+  // 没有输入资料 -> 输入资料页
+  if (!project.inputSources || project.inputSources.length === 0) {
+    return `/projects/${project.id}/input`;
+  }
+  // 有输入资料但没有产品理解 -> 输入资料页
+  if (!project.productUnderstanding) {
+    return `/projects/${project.id}/input`;
+  }
+  // 有产品理解但没有功能结构图 -> 分析页
+  if (!project.featureTree) {
+    return `/projects/${project.id}/analysis`;
+  }
+  // 有功能结构图但没有页面清单 -> 功能结构图页
+  if (!project.pageList) {
+    return `/projects/${project.id}/structure`;
+  }
+  // 有页面清单但没有跳转关系 -> 页面清单页
+  if (!project.flows) {
+    return `/projects/${project.id}/pages`;
+  }
+  // 有跳转关系但没有线框图 -> 跳转关系页
+  if (!project.wireframes) {
+    return `/projects/${project.id}/flows`;
+  }
+  // 有线框图但没有 PRD -> 线框图页
+  if (!project.prd) {
+    return `/projects/${project.id}/wireframes`;
+  }
+  // 有 PRD 但没有研发说明 -> PRD 页
+  if (!project.devHandoff) {
+    return `/projects/${project.id}/prd`;
+  }
+  // 有研发说明 -> 研发说明页
+  return `/projects/${project.id}/handoff`;
+}
 
 export default function HomePage() {
   const projects = useProjects();
@@ -68,7 +109,7 @@ export default function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recentProjects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}/input`}>
+              <Link key={project.id} href={getContinuePath(project)}>
                 <Card className="transition-shadow hover:shadow-md">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">

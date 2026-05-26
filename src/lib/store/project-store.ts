@@ -496,6 +496,14 @@ export const useProjectStore = create<ProjectStore>()(
 );
 
 /**
+ * 根据 projectId 获取项目
+ */
+export function useProjectById(projectId: string): Project | undefined {
+  const projects = useProjectStore((state) => state.projects);
+  return projects.find((p) => p.id === projectId);
+}
+
+/**
  * 获取当前项目
  */
 export function useCurrentProject(): Project | undefined {

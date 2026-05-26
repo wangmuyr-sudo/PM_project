@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
+import { useProjectStore, useProjectById } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,7 @@ export default function InputPage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const project = useCurrentProject();
+  const project = useProjectById(projectId);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const addInputSource = useProjectStore((state) => state.addInputSource);
   const removeInputSource = useProjectStore((state) => state.removeInputSource);
@@ -62,11 +62,12 @@ export default function InputPage() {
     );
   }
 
-  // 获取已上传的图片
+  // 获取已上传的图片和文字资料
   const imageSources = project.inputSources.filter((s) => s.type === 'image');
+  const textSources = project.inputSources.filter((s) => s.type === 'text');
 
-  // 判断是否有输入内容（文本框有内容或有上传的图片）
-  const hasInput = textInput.trim().length > 0 || imageSources.length > 0;
+  // 判断是否有输入内容（文本框有内容、或有已保存的文字资料、或有上传的图片）
+  const hasInput = textInput.trim().length > 0 || textSources.length > 0 || imageSources.length > 0;
 
   // 处理图片上传
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,7 +225,7 @@ export default function InputPage() {
                 输入产品需求描述、功能说明或想法
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <Textarea
                 placeholder="直接粘贴你的想法、页面清单、功能说明、已有页面描述或 AI 生成结果。比如：首页包含 banner、医生列表、预约入口；医生详情页包含医生信息、可预约时间、评价和预约按钮。"
                 value={textInput}
@@ -232,6 +233,31 @@ export default function InputPage() {
                 rows={12}
                 className="resize-none"
               />
+
+              {/* 已保存的文字资料 */}
+              {textSources.length > 0 && (
+                <div className="space-y-3 pt-4 border-t">
+                  <Label className="text-sm font-medium text-gray-700">已保存文字资料</Label>
+                  {textSources.map((source) => (
+                    <div
+                      key={source.id}
+                      className="group relative rounded-md border bg-gray-50 p-3"
+                    >
+                      <p className="text-sm text-gray-700 line-clamp-4 pr-8">
+                        {source.content}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-600"
+                        onClick={() => handleRemoveSource(source.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 

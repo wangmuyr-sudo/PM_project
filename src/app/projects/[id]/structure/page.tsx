@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
+import { useProjectStore, useProjectById } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import type { FeatureNode, FeatureNodeType, PresentationType, NodeStatus, ConfidenceLevel, ConfirmQuestion } from '@/lib/types';
 import { findNodeById, flattenNodes, countNodesByType } from '@/lib/types/feature-tree';
@@ -179,7 +179,7 @@ export default function StructurePage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const project = useCurrentProject();
+  const project = useProjectById(projectId);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const setFeatureTree = useProjectStore((state) => state.setFeatureTree);
   const updateFeatureNode = useProjectStore((state) => state.updateFeatureNode);

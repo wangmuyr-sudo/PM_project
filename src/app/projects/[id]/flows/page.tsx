@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
+import { useProjectStore, useProjectById } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import type { ProductFlow, FlowType } from '@/lib/types';
 import { groupFlowsByType } from '@/lib/types/flow';
@@ -15,7 +15,7 @@ export default function FlowsPage() {
   const params = useParams();
   const projectId = params.id as string;
 
-  const project = useCurrentProject();
+  const project = useProjectById(projectId);
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const updateProject = useProjectStore((state) => state.updateProject);
   const [mounted, setMounted] = useState(false);
