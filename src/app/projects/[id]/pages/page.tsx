@@ -73,11 +73,24 @@ export default function PagesPage() {
       page.id === pageId ? { ...page, status: newStatus } : page
     );
     setPageList(updatedList);
-    updateProject(projectId, { pageList: updatedList });
+    // 页面清单变更后，清空下游交付物
+    updateProject(projectId, { 
+      pageList: updatedList,
+      flows: undefined,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
   };
   
   const handleSave = () => {
-    updateProject(projectId, { pageList });
+    updateProject(projectId, { 
+      pageList,
+      flows: undefined,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
   };
   
   if (!mounted) {

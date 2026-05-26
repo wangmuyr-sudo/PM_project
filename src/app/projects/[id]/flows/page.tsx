@@ -84,9 +84,15 @@ export default function FlowsPage() {
 
   // 更新流程状态
   const updateFlowStatus = (flowId: string, newType: FlowType) => {
-    setFlowList((prev) =>
-      prev.map((flow) => (flow.id === flowId ? { ...flow, type: newType } : flow))
-    );
+    const updatedList = flowList.map((flow) => (flow.id === flowId ? { ...flow, type: newType } : flow));
+    setFlowList(updatedList);
+    // 跳转关系变更后，自动保存并清空下游交付物
+    updateProject(projectId, {
+      flows: updatedList,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
   };
 
   if (!mounted) {

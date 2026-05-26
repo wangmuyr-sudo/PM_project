@@ -29,6 +29,7 @@ export default function InputPage() {
   const addInputSource = useProjectStore((state) => state.addInputSource);
   const removeInputSource = useProjectStore((state) => state.removeInputSource);
   const setProductUnderstanding = useProjectStore((state) => state.setProductUnderstanding);
+  const updateProject = useProjectStore((state) => state.updateProject);
 
   const [textInput, setTextInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -141,6 +142,16 @@ export default function InputPage() {
 
       // 保存分析结果
       setProductUnderstanding(projectId, understanding);
+
+      // 清空下游交付物，确保重新分析后下游必须重新生成
+      updateProject(projectId, {
+        featureTree: undefined,
+        pageList: undefined,
+        flows: undefined,
+        wireframes: undefined,
+        prd: undefined,
+        devHandoff: undefined,
+      });
 
       // 跳转到分析结果页
       router.push(`/projects/${projectId}/analysis`);

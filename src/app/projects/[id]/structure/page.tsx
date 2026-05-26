@@ -183,7 +183,10 @@ export default function StructurePage() {
   const setCurrentProject = useProjectStore((state) => state.setCurrentProject);
   const setFeatureTree = useProjectStore((state) => state.setFeatureTree);
   const updateFeatureNode = useProjectStore((state) => state.updateFeatureNode);
+  const addFeatureNode = useProjectStore((state) => state.addFeatureNode);
+  const removeFeatureNode = useProjectStore((state) => state.removeFeatureNode);
   const answerQuestion = useProjectStore((state) => state.answerQuestion);
+  const updateProject = useProjectStore((state) => state.updateProject);
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -197,6 +200,14 @@ export default function StructurePage() {
     presentationType: 'page' as PresentationType,
     status: 'pending' as NodeStatus,
     reason: '',
+  });
+
+  // 新增节点表单状态
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({
+    name: '',
+    type: 'module' as FeatureNodeType,
+    presentationType: 'inline' as PresentationType,
   });
 
   // 确保当前项目ID设置正确
@@ -328,6 +339,17 @@ export default function StructurePage() {
     setSelectedNodeId(node.id);
   };
 
+  // 功能结构图变更后，清空下游交付物
+  const invalidateAfterFeatureTreeChange = () => {
+    updateProject(projectId, {
+      pageList: undefined,
+      flows: undefined,
+      wireframes: undefined,
+      prd: undefined,
+      devHandoff: undefined,
+    });
+  };
+
   // 保存节点修改
   const handleSaveNode = () => {
     if (!selectedNodeId) return;
@@ -339,12 +361,80 @@ export default function StructurePage() {
       status: editForm.status,
       reason: editForm.reason,
     });
+    invalidateAfterFeatureTreeChange();
   };
 
   // 回答问题
   const handleAnswerQuestion = (questionId: string, answer: string) => {
     if (!selectedNodeId) return;
     answerQuestion(projectId, selectedNodeId, questionId, answer);
+    invalidateAfterFeatureTreeChange();
+  };
+
+  // 新增根节点
+  const handleAddRootNode = () => {
+    if (!addForm.name.trim()) return;
+    const newNode: FeatureNode = {
+      id: `node-${Date.now()}`,
+      name: addForm.name.trim(),
+      type: addForm.type,
+      presentationType: addForm.presentationType,
+      status: 'pending',
+      confidence: 'low',
+      description: '',
+      reason: '用户手动新增，需进一步确认。',
+      children: [],
+    };
+    const addedNode = addFeatureNode(projectId, null, newNode);
+    if (addedNode) {
+      setSelectedNodeId(addedNode.id);
+      setExpandedNodes((prev) => new Set([...prev, addedNode.id]));
+    }
+    setAddForm({ name: '', type: 'module', presentationType: 'inline' });
+    setShowAddForm(false);
+    invalidateAfterFeatureTreeChange();
+  };
+
+  // 新增子节点
+  const handleAddChildNode = () => {
+    if (!selectedNodeId || !addForm.name.trim()) return;
+    const newNode: FeatureNode = {
+      id: `node-${Date.now()}`,
+      name: addForm.name.trim(),
+      type: addForm.type,
+      presentationType: addForm.presentationType,
+      status: 'pending',
+      confidence: 'low',
+      description: '',
+      reason: '用户手动新增，需进一步确认。',
+      children: [],
+    };
+    const addedNode = addFeatureNode(projectId, selectedNodeId, newNode);
+    if (addedNode) {
+      setSelectedNodeId(addedNode.id);
+      setExpandedNodes((prev) => new Set([...prev, selectedNodeId, addedNode.id]));
+    }
+    setAddForm({ name: '', type: 'module', presentationType: 'inline' });
+    setShowAddForm(false);
+    invalidateAfterFeatureTreeChange();
+  };
+
+  // 删除节点
+  const handleDeleteNode = () => {
+    if (!selectedNodeId) return;
+    const confirmed = window.confirm('确定要删除该节点及其所有子节点吗？此操作不可撤销。');
+    if (!confirmed) return;
+    removeFeatureNode(projectId, selectedNodeId);
+    setSelectedNodeId(null);
+    invalidateAfterFeatureTreeChange();
+  };
+
+  // 下一步：保存当前节点后跳转
+  const handleNextStep = () => {
+    if (selectedNodeId) {
+      handleSaveNode();
+    }
+    router.push(`/projects/${projectId}/pages`);
   };
 
   // 展开所有节点
@@ -387,12 +477,10 @@ export default function StructurePage() {
                 <Save className="mr-2 h-4 w-4" />
                 保存
               </Button>
-              <Link href={`/projects/${projectId}/pages`}>
-                <Button size="sm">
-                  下一步：生成页面清单
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
+              <Button size="sm" onClick={handleNextStep}>
+                下一步：生成页面清单
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -406,6 +494,9 @@ export default function StructurePage() {
             <div className="flex items-center justify-between">
               <h2 className="font-medium text-sm">功能结构树</h2>
               <div className="flex gap-1">
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-green-600" onClick={() => setShowAddForm(true)}>
+                  + 新增根节点
+                </Button>
                 <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={expandAllNodes}>
                   全部展开
                 </Button>
@@ -436,6 +527,58 @@ export default function StructurePage() {
           )}
 
           <div className="flex-1 overflow-auto p-2">
+            {showAddForm && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3 space-y-3">
+                <div className="text-sm font-medium text-green-700">新增根节点</div>
+                <Input
+                  placeholder="节点名称（必填）"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                  className="h-8 text-sm"
+                />
+                <div className="flex gap-2">
+                  <Select
+                    value={addForm.type}
+                    onValueChange={(value: FeatureNodeType) => setAddForm({ ...addForm, type: value })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => (
+                        <SelectItem key={type} value={type}>
+                          {config.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={addForm.presentationType}
+                    onValueChange={(value: PresentationType) => setAddForm({ ...addForm, presentationType: value })}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PRESENTATION_TYPE_CONFIG).map(([type, label]) => (
+                        <SelectItem key={type} value={type}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" className="h-7 text-xs flex-1" onClick={handleAddRootNode}>
+                    确定新增
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
+                    取消
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -596,6 +739,77 @@ export default function StructurePage() {
                   <Save className="mr-2 h-4 w-4" />
                   保存修改
                 </Button>
+
+                {/* 新增子节点按钮 */}
+                <Button
+                  variant="outline"
+                  className="w-full text-green-600 border-green-200 hover:bg-green-50"
+                  onClick={() => setShowAddForm(true)}
+                >
+                  + 新增子节点
+                </Button>
+
+                {/* 删除节点按钮 */}
+                <Button
+                  variant="outline"
+                  className="w-full text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={handleDeleteNode}
+                >
+                  删除当前节点
+                </Button>
+
+                {/* 新增子节点表单 */}
+                {showAddForm && selectedNode && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-3">
+                    <div className="text-sm font-medium text-green-700">新增子节点</div>
+                    <Input
+                      placeholder="节点名称（必填）"
+                      value={addForm.name}
+                      onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
+                      className="h-8 text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <Select
+                        value={addForm.type}
+                        onValueChange={(value: FeatureNodeType) => setAddForm({ ...addForm, type: value })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(NODE_TYPE_CONFIG).map(([type, config]) => (
+                            <SelectItem key={type} value={type}>
+                              {config.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={addForm.presentationType}
+                        onValueChange={(value: PresentationType) => setAddForm({ ...addForm, presentationType: value })}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(PRESENTATION_TYPE_CONFIG).map(([type, label]) => (
+                            <SelectItem key={type} value={type}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="h-7 text-xs flex-1" onClick={handleAddChildNode}>
+                        确定新增
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setShowAddForm(false); setAddForm({ name: '', type: 'module', presentationType: 'inline' }); }}>
+                        取消
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500 text-sm">
