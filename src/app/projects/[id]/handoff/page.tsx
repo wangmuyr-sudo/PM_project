@@ -7,7 +7,7 @@ import { useProjectStore, useCurrentProject } from '@/lib/store/project-store';
 import { getAIProvider } from '@/lib/ai/ai-client';
 import { Button } from '@/components/ui/button';
 
-export default function PRDPage() {
+export default function HandoffPage() {
   const params = useParams();
   const projectId = params.id as string;
 
@@ -16,7 +16,7 @@ export default function PRDPage() {
   const updateProject = useProjectStore((state) => state.updateProject);
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [prdContent, setPrdContent] = useState<string>('');
+  const [devHandoffContent, setDevHandoffContent] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
@@ -29,64 +29,67 @@ export default function PRDPage() {
     }
   }, [projectId, setCurrentProject]);
 
-  const generatePRD = useCallback(async () => {
+  const generateDevHandoff = useCallback(async () => {
     // 检查前置条件
     if (!project?.featureTree) {
-      console.error('缺少功能结构图，无法生成 PRD');
+      console.error('缺少功能结构图，无法生成研发说明');
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
-      console.error('缺少页面清单，无法生成 PRD');
+      console.error('缺少页面清单，无法生成研发说明');
       return;
     }
     if (!project?.flows || project.flows.length === 0) {
-      console.error('缺少跳转关系，无法生成 PRD');
+      console.error('缺少跳转关系，无法生成研发说明');
       return;
     }
     if (!project?.wireframes || project.wireframes.length === 0) {
-      console.error('缺少线框图，无法生成 PRD');
+      console.error('缺少线框图，无法生成研发说明');
+      return;
+    }
+    if (!project?.prd || project.prd.length === 0) {
+      console.error('缺少 PRD，无法生成研发说明');
       return;
     }
 
     setIsLoading(true);
     try {
       const ai = getAIProvider();
-      const prd = await ai.generatePRD({
+      const devHandoff = await ai.generateDevHandoff({
         featureTree: project.featureTree,
         pageList: project.pageList,
         flows: project.flows,
-        wireframes: project.wireframes,
         project: { name: project.name },
       });
-      setPrdContent(prd);
+      setDevHandoffContent(devHandoff);
       // 保存到 Store
-      updateProject(projectId, { prd });
+      updateProject(projectId, { devHandoff });
     } catch (error) {
-      console.error('生成 PRD 失败:', error);
+      console.error('生成研发说明失败:', error);
     } finally {
       setIsLoading(false);
     }
   }, [project, projectId, updateProject]);
 
-  // 加载或生成 PRD
+  // 加载或生成研发说明
   useEffect(() => {
     if (!project) return;
 
-    if (project.prd && project.prd.length > 0) {
-      setPrdContent(project.prd);
+    if (project.devHandoff && project.devHandoff.length > 0) {
+      setDevHandoffContent(project.devHandoff);
     } else {
-      // 自动生成 PRD
-      generatePRD();
+      // 自动生成研发说明
+      generateDevHandoff();
     }
-  }, [project, generatePRD]);
+  }, [project, generateDevHandoff]);
 
   const handleSave = () => {
-    updateProject(projectId, { prd: prdContent });
+    updateProject(projectId, { devHandoff: devHandoffContent });
   };
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(prdContent);
+      await navigator.clipboard.writeText(devHandoffContent);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (error) {
@@ -95,11 +98,41 @@ export default function PRDPage() {
   };
 
   const handleExport = () => {
-    const blob = new Blob([prdContent], { type: 'text/markdown;charset=utf-8' });
+    const blob = new Blob([devHandoffContent], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${project?.name || '产品'}-PRD.md`;
+    link.download = `${project?.name || '产品'}-研发说明.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportJSON = () => {
+    if (!project) return;
+
+    const exportData = {
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      inputSources: project.inputSources,
+      productUnderstanding: project.productUnderstanding,
+      featureTree: project.featureTree,
+      pageList: project.pageList,
+      flows: project.flows,
+      wireframes: project.wireframes,
+      prd: project.prd,
+      devHandoff: project.devHandoff,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${project.name}-project.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -342,20 +375,18 @@ export default function PRDPage() {
       <header className="bg-white border-b px-6 py-4 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href={`/projects/${projectId}/wireframes`}>
-              <Button variant="outline">返回线框图</Button>
+            <Link href={`/projects/${projectId}/prd`}>
+              <Button variant="outline">返回 PRD</Button>
             </Link>
-            <h1 className="text-xl font-semibold">{project.name} - PRD</h1>
+            <h1 className="text-xl font-semibold">{project.name} - 研发说明</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={handleSave} variant="outline">保存 PRD</Button>
+            <Button onClick={handleSave} variant="outline">保存研发说明</Button>
             <Button onClick={handleCopy} variant="outline">
-              {copySuccess ? '已复制' : '复制 PRD'}
+              {copySuccess ? '已复制' : '复制研发说明'}
             </Button>
             <Button onClick={handleExport} variant="outline">导出 Markdown</Button>
-            <Link href={`/projects/${projectId}/handoff`}>
-              <Button>下一步：生成研发说明</Button>
-            </Link>
+            <Button onClick={handleExportJSON} variant="outline">导出完整项目 JSON</Button>
           </div>
         </div>
       </header>
@@ -364,12 +395,12 @@ export default function PRDPage() {
       <main className="max-w-5xl mx-auto px-6 py-8">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <p>正在生成 PRD...</p>
+            <p>正在生成研发说明...</p>
           </div>
         ) : (
           <div className="bg-white rounded-lg border p-8 shadow-sm">
             <article className="prose prose-gray max-w-none">
-              {renderMarkdown(prdContent)}
+              {renderMarkdown(devHandoffContent)}
             </article>
           </div>
         )}
