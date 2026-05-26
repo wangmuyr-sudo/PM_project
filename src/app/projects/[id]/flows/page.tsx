@@ -21,7 +21,13 @@ export default function FlowsPage() {
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [flowList, setFlowList] = useState<ProductFlow[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  type ErrorState = {
+    title: string;
+    message: string;
+    href: string;
+    actionLabel: string;
+  };
+  const [errorState, setErrorState] = useState<ErrorState | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -38,16 +44,26 @@ export default function FlowsPage() {
     // 检查前置条件
     if (!project?.featureTree) {
       console.error('缺少功能结构图，无法生成跳转关系');
-      setErrorMessage('缺少功能结构图，无法生成跳转关系。请先在功能结构图页生成并保存功能结构。');
+      setErrorState({
+        title: '无法生成跳转关系',
+        message: '缺少功能结构图，无法生成跳转关系。请先在功能结构图页生成并保存功能结构。',
+        href: `/projects/${projectId}/structure`,
+        actionLabel: '返回功能结构图',
+      });
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
       console.error('缺少页面清单，无法生成跳转关系');
-      setErrorMessage('缺少页面清单，无法生成跳转关系。请先在页面清单页生成并保存页面范围。');
+      setErrorState({
+        title: '无法生成跳转关系',
+        message: '缺少页面清单，无法生成跳转关系。请先在页面清单页生成并保存页面范围。',
+        href: `/projects/${projectId}/pages`,
+        actionLabel: '返回页面清单',
+      });
       return;
     }
 
-    setErrorMessage('');
+    setErrorState(null);
     setIsLoading(true);
     try {
       const ai = getAIProvider();
@@ -225,15 +241,15 @@ export default function FlowsPage() {
       {/* 主要内容 */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* 错误提示 */}
-        {errorMessage && (
+        {errorState && (
           <Card className="mb-6 border-amber-200 bg-amber-50">
             <CardHeader>
-              <CardTitle className="text-amber-800">无法生成跳转关系</CardTitle>
+              <CardTitle className="text-amber-800">{errorState.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-amber-700 mb-4">{errorMessage}</p>
-              <Link href={`/projects/${projectId}/pages`}>
-                <Button variant="outline">返回页面清单</Button>
+              <p className="text-amber-700 mb-4">{errorState.message}</p>
+              <Link href={errorState.href}>
+                <Button variant="outline">{errorState.actionLabel}</Button>
               </Link>
             </CardContent>
           </Card>

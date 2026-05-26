@@ -20,7 +20,13 @@ export default function PRDPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [prdContent, setPrdContent] = useState<string>('');
   const [copySuccess, setCopySuccess] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  type ErrorState = {
+    title: string;
+    message: string;
+    href: string;
+    actionLabel: string;
+  };
+  const [errorState, setErrorState] = useState<ErrorState | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -36,26 +42,46 @@ export default function PRDPage() {
     // 检查前置条件
     if (!project?.featureTree) {
       console.error('缺少功能结构图，无法生成 PRD');
-      setErrorMessage('缺少功能结构图，无法生成 PRD。请先在功能结构图页生成并保存功能结构。');
+      setErrorState({
+        title: '无法生成 PRD',
+        message: '缺少功能结构图，无法生成 PRD。请先在功能结构图页生成并保存功能结构。',
+        href: `/projects/${projectId}/structure`,
+        actionLabel: '返回功能结构图',
+      });
       return;
     }
     if (!project?.pageList || project.pageList.length === 0) {
       console.error('缺少页面清单，无法生成 PRD');
-      setErrorMessage('缺少页面清单，无法生成 PRD。请先在页面清单页生成并保存页面范围。');
+      setErrorState({
+        title: '无法生成 PRD',
+        message: '缺少页面清单，无法生成 PRD。请先在页面清单页生成并保存页面范围。',
+        href: `/projects/${projectId}/pages`,
+        actionLabel: '返回页面清单',
+      });
       return;
     }
     if (!project?.flows || project.flows.length === 0) {
       console.error('缺少跳转关系，无法生成 PRD');
-      setErrorMessage('缺少跳转关系，无法生成 PRD。请先在跳转关系页生成并保存页面关系。');
+      setErrorState({
+        title: '无法生成 PRD',
+        message: '缺少跳转关系，无法生成 PRD。请先在跳转关系页生成并保存页面关系。',
+        href: `/projects/${projectId}/flows`,
+        actionLabel: '返回跳转关系',
+      });
       return;
     }
     if (!project?.wireframes || project.wireframes.length === 0) {
       console.error('缺少线框图，无法生成 PRD');
-      setErrorMessage('缺少线框图，无法生成 PRD。请先在线框图页生成页面结构草图。');
+      setErrorState({
+        title: '无法生成 PRD',
+        message: '缺少线框图，无法生成 PRD。请先在线框图页生成页面结构草图。',
+        href: `/projects/${projectId}/wireframes`,
+        actionLabel: '返回线框图',
+      });
       return;
     }
 
-    setErrorMessage('');
+    setErrorState(null);
     setIsLoading(true);
     try {
       const ai = getAIProvider();
@@ -408,15 +434,15 @@ export default function PRDPage() {
       {/* 主要内容 */}
       <main className="max-w-5xl mx-auto px-6 py-8">
         {/* 错误提示 */}
-        {errorMessage && (
+        {errorState && (
           <Card className="mb-6 border-amber-200 bg-amber-50">
             <CardHeader>
-              <CardTitle className="text-amber-800">无法生成 PRD</CardTitle>
+              <CardTitle className="text-amber-800">{errorState.title}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-amber-700 mb-4">{errorMessage}</p>
-              <Link href={`/projects/${projectId}/wireframes`}>
-                <Button variant="outline">返回线框图</Button>
+              <p className="text-amber-700 mb-4">{errorState.message}</p>
+              <Link href={errorState.href}>
+                <Button variant="outline">{errorState.actionLabel}</Button>
               </Link>
             </CardContent>
           </Card>
