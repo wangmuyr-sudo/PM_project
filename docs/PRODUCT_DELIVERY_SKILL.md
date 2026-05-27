@@ -454,15 +454,84 @@ The wireframe is not a high-fidelity UI.
 
 The goal is clarity, not visual beauty.
 
-Wireframes must show:
+## Core Rule: Real Page → State Frame → Module
 
-- Page areas
-- Module positions
-- Field positions
-- Button positions
-- Modal labels
-- Bottom sheet labels
-- State labels
+Wireframe is not "one page per wireframe". It is:
+
+Real Page + Page States
+
+Each real page generates at least one default state WireframePage.
+If a page has interactive states (modal, bottom-sheet, toast, etc.), generate multiple WireframePage state frames with the same pageId.
+
+State frames only exist in wireframes, not in pageList.
+
+### Real Page Structure
+
+Each real page can contain multiple state frames:
+
+Real Page
+├── Default State
+├── Modal Open State
+├── Bottom Sheet Open State
+├── Toast State
+├── Form Validation Error State
+├── Submitting State
+├── Success State
+├── Failed State
+├── Empty State
+├── Filter Result State
+├── Tab State
+├── Authorization Modal
+├── Payment Confirmation
+└── Other Interactive States
+
+### State Frame Naming
+
+- Default state: PageName - Default State
+- Other states: PageName - State Description
+
+Example:
+- Doctor List - Default State
+- Doctor List - Department Filter Bottom Sheet Open
+- Doctor List - No Doctor Result Empty State
+- Booking Confirm - Form Validation Error State
+- Booking Confirm - Submit Success State
+
+### pageId Rule
+
+Multiple state frames of the same real page must have the same pageId.
+
+Example:
+{
+  id: "doctor-list-default",
+  pageId: "doctor-list",
+  pageName: "Doctor List - Default State",
+  blocks: [...]
+}
+
+{
+  id: "doctor-list-filter-sheet",
+  pageId: "doctor-list",
+  pageName: "Doctor List - Department Filter Bottom Sheet Open",
+  blocks: [...]
+}
+
+### blocks Must Express Tree Structure
+
+WireframePage.blocks is not flat.
+Each block can express sub-structure through children.
+
+### Modal / Bottom Sheet Must Be Independent Modules in State Frame
+
+Do not mix modal directly in default page.
+Modal open state should keep the main page structure, then overlay the modal/bottom-sheet.
+
+### Page Jump Does NOT Generate State Frame
+
+Page jump is expressed by flows, not wireframe state frames.
+Only generate state frame when page does NOT jump but visual state changes.
+
+### Block Types
 
 Use these wireframe block types:
 

@@ -76,6 +76,14 @@ export function WireframeInspector({ wireframe }: WireframeInspectorProps) {
     );
   }
 
+  // 分割真实页面名称和状态名称
+  // "预约确认页 - 表单校验错误状态" -> 真实页面: 预约确认页, 当前状态: 表单校验错误状态
+  const nameParts = wireframe.pageName.includes(' - ')
+    ? wireframe.pageName.split(' - ')
+    : [wireframe.pageName, ''];
+  const realPageName = nameParts[0];
+  const stateName = nameParts.slice(1).join(' - ');
+
   const fields = collectFields(wireframe.blocks);
   const actions = collectActions(wireframe.blocks);
   const blockTypeCounts = countBlockTypes(wireframe.blocks);
@@ -83,10 +91,16 @@ export function WireframeInspector({ wireframe }: WireframeInspectorProps) {
   return (
     <div className="w-80 bg-white border-l border-slate-200 overflow-y-auto">
       <div className="p-5">
-        {/* 页面名称 */}
+        {/* 页面名称 - 真实页面 + 当前状态 */}
         <div className="mb-5">
-          <h3 className="text-lg font-semibold text-slate-800">{wireframe.pageName}</h3>
-          <p className="text-xs text-slate-400 mt-1">页面详情</p>
+          <div className="text-xs text-slate-400 mb-1">真实页面</div>
+          <h3 className="text-base font-semibold text-slate-800">{realPageName}</h3>
+          {stateName && (
+            <>
+              <div className="text-xs text-slate-400 mt-2 mb-1">当前状态</div>
+              <h4 className="text-sm font-medium text-slate-600">{stateName}</h4>
+            </>
+          )}
         </div>
 
         {/* 统计卡片 */}
