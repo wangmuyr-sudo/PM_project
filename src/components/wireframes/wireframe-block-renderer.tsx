@@ -1339,6 +1339,7 @@ const renderForm = (block: WireframeBlock) => {
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-3 m-2">
       <div className="text-sm font-medium text-slate-700 mb-2">{block.title}</div>
+      {/* 没有 fields 时不补假输入框 */}
       {block.fields && block.fields.length > 0 ? (
         <div className="space-y-2">
           {block.fields.map((field, i) => (
@@ -1348,9 +1349,11 @@ const renderForm = (block: WireframeBlock) => {
           ))}
         </div>
       ) : (
-        <div className="h-8 bg-slate-100 rounded flex items-center px-2">
-          <span className="text-xs text-slate-400">输入框占位</span>
-        </div>
+        block.description ? (
+          <p className="text-xs text-slate-400">{block.description}</p>
+        ) : (
+          <p className="text-xs text-slate-300">暂无表单字段</p>
+        )
       )}
       {block.actions && block.actions.length > 0 && (
         <div className="flex gap-2 mt-2">
