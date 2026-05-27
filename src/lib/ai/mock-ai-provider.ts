@@ -231,660 +231,48 @@ export class MockAIProvider implements AIProvider {
     await this.delay(1000);
 
     const platform = params.platform || 'mini-program';
+    const platformLabel = platformProfiles[platform]?.label || '小程序';
 
-    // 首页状态帧
-    const homeWireframes = this.createHomePageStates(platform);
-    // 医生列表页状态帧
-    const doctorListWireframes = this.createDoctorListPageStates(platform);
-    // 医生详情页状态帧
-    const doctorDetailWireframes = this.createDoctorDetailPageStates(platform);
-    // 预约确认页状态帧
-    const bookingConfirmWireframes = this.createBookingConfirmPageStates(platform);
-    // 我的预约页状态帧
-    const myBookingsWireframes = this.createMyBookingsPageStates(platform);
-    // 个人中心状态帧
-    const personalCenterWireframes = this.createPersonalCenterPageStates(platform);
-
-    return [
-      ...homeWireframes,
-      ...doctorListWireframes,
-      ...doctorDetailWireframes,
-      ...bookingConfirmWireframes,
-      ...myBookingsWireframes,
-      ...personalCenterWireframes,
-    ];
-  }
-
-  // 首页状态帧
-  private createHomePageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createHomePageBaseBlocks(platform);
-    return [
+    const wireframes: WireframePage[] = [
       {
-        id: 'home-default',
-        pageId: 'home',
-        pageName: '首页 - 默认状态',
-        blocks: baseBlocks,
+        id: 'wireframe-1',
+        pageId: 'page-1',
+        pageName: '首页',
+        blocks: this.createPlatformHomePageBlocks(platform),
       },
       {
-        id: 'home-empty-state',
-        pageId: 'home',
-        pageName: '首页 - 无推荐医生空状态',
-        blocks: this.createHomePageEmptyState(platform),
-      },
-    ];
-  }
-
-  // 医生列表页状态帧
-  private createDoctorListPageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createDoctorListPageBaseBlocks(platform);
-    const filterSheetBlocks = this.createDoctorListPageFilterSheet(platform);
-    const emptyBlocks = this.createDoctorListPageEmptyState(platform);
-
-    return [
-      {
-        id: 'doctor-list-default',
-        pageId: 'doctor-list',
-        pageName: '医生列表页 - 默认状态',
-        blocks: baseBlocks,
+        id: 'wireframe-2',
+        pageId: 'page-2',
+        pageName: '医生列表页',
+        blocks: this.createPlatformDoctorListBlocks(platform),
       },
       {
-        id: 'doctor-list-filter-sheet',
-        pageId: 'doctor-list',
-        pageName: '医生列表页 - 科室筛选底部弹层打开',
-        blocks: [...baseBlocks, ...filterSheetBlocks],
+        id: 'wireframe-3',
+        pageId: 'page-3',
+        pageName: '医生详情页',
+        blocks: this.createPlatformDoctorDetailBlocks(platform),
       },
       {
-        id: 'doctor-list-filtered',
-        pageId: 'doctor-list',
-        pageName: '医生列表页 - 筛选结果状态',
-        blocks: this.createDoctorListPageFiltered(platform),
+        id: 'wireframe-4',
+        pageId: 'page-4',
+        pageName: '预约确认页',
+        blocks: this.createPlatformBookingConfirmBlocks(platform),
       },
       {
-        id: 'doctor-list-empty',
-        pageId: 'doctor-list',
-        pageName: '医生列表页 - 无医生结果空状态',
-        blocks: emptyBlocks,
+        id: 'wireframe-5',
+        pageId: 'page-5',
+        pageName: '我的预约页',
+        blocks: this.createPlatformMyBookingsBlocks(platform),
       },
       {
-        id: 'doctor-list-loading',
-        pageId: 'doctor-list',
-        pageName: '医生列表页 - 加载中状态',
-        blocks: this.createDoctorListPageLoading(platform),
+        id: 'wireframe-6',
+        pageId: 'page-6',
+        pageName: '个人中心',
+        blocks: this.createPlatformPersonalCenterBlocks(platform),
       },
     ];
-  }
 
-  // 医生详情页状态帧
-  private createDoctorDetailPageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createDoctorDetailPageBaseBlocks(platform);
-
-    return [
-      {
-        id: 'doctor-detail-default',
-        pageId: 'doctor-detail',
-        pageName: '医生详情页 - 默认状态',
-        blocks: baseBlocks,
-      },
-      {
-        id: 'doctor-detail-timesheet-sheet',
-        pageId: 'doctor-detail',
-        pageName: '医生详情页 - 预约时间选择底部弹层打开',
-        blocks: [...baseBlocks, ...this.createDoctorDetailTimeSheet(platform)],
-      },
-      {
-        id: 'doctor-detail-auth-modal',
-        pageId: 'doctor-detail',
-        pageName: '医生详情页 - 未登录授权弹窗',
-        blocks: [...baseBlocks, ...this.createDoctorDetailAuthModal(platform)],
-      },
-      {
-        id: 'doctor-detail-success-toast',
-        pageId: 'doctor-detail',
-        pageName: '医生详情页 - 预约成功 Toast',
-        blocks: [...baseBlocks, ...this.createDoctorDetailSuccessToast(platform)],
-      },
-      {
-        id: 'doctor-detail-no-timeslot',
-        pageId: 'doctor-detail',
-        pageName: '医生详情页 - 无可预约时间状态',
-        blocks: this.createDoctorDetailNoTimeslot(platform),
-      },
-    ];
-  }
-
-  // 预约确认页状态帧
-  private createBookingConfirmPageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createBookingConfirmPageBaseBlocks(platform);
-
-    return [
-      {
-        id: 'booking-confirm-default',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 默认状态',
-        blocks: baseBlocks,
-      },
-      {
-        id: 'booking-confirm-patient-sheet',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 就诊人选择底部弹层打开',
-        blocks: [...baseBlocks, ...this.createBookingConfirmPatientSheet(platform)],
-      },
-      {
-        id: 'booking-confirm-time-sheet',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 时间选择底部弹层打开',
-        blocks: [...baseBlocks, ...this.createBookingConfirmTimeSheet(platform)],
-      },
-      {
-        id: 'booking-confirm-validation-error',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 表单校验错误状态',
-        blocks: this.createBookingConfirmValidationError(platform),
-      },
-      {
-        id: 'booking-confirm-submitting',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 提交中状态',
-        blocks: this.createBookingConfirmSubmitting(platform),
-      },
-      {
-        id: 'booking-confirm-success',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 提交成功状态',
-        blocks: [...baseBlocks, ...this.createBookingConfirmSuccessModal(platform)],
-      },
-      {
-        id: 'booking-confirm-failed',
-        pageId: 'booking-confirm',
-        pageName: '预约确认页 - 提交失败状态',
-        blocks: [...baseBlocks, ...this.createBookingConfirmFailedModal(platform)],
-      },
-    ];
-  }
-
-  // 我的预约页状态帧
-  private createMyBookingsPageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createMyBookingsPageBaseBlocks(platform);
-
-    return [
-      {
-        id: 'my-bookings-default',
-        pageId: 'my-bookings',
-        pageName: '我的预约页 - 默认状态',
-        blocks: baseBlocks,
-      },
-      {
-        id: 'my-bookings-cancel-modal',
-        pageId: 'my-bookings',
-        pageName: '我的预约页 - 取消预约确认弹窗',
-        blocks: [...baseBlocks, ...this.createMyBookingsCancelModal(platform)],
-      },
-      {
-        id: 'my-bookings-cancel-success',
-        pageId: 'my-bookings',
-        pageName: '我的预约页 - 取消成功 Toast',
-        blocks: [...baseBlocks, ...this.createMyBookingsCancelSuccessToast(platform)],
-      },
-      {
-        id: 'my-bookings-reschedule-sheet',
-        pageId: 'my-bookings',
-        pageName: '我的预约页 - 改约时间选择底部弹层',
-        blocks: [...baseBlocks, ...this.createMyBookingsRescheduleSheet(platform)],
-      },
-      {
-        id: 'my-bookings-empty',
-        pageId: 'my-bookings',
-        pageName: '我的预约页 - 无预约记录空状态',
-        blocks: this.createMyBookingsEmptyState(platform),
-      },
-    ];
-  }
-
-  // 个人中心状态帧
-  private createPersonalCenterPageStates(platform: PlatformType): WireframePage[] {
-    const baseBlocks = this.createPersonalCenterPageBaseBlocks(platform);
-
-    return [
-      {
-        id: 'personal-center-default',
-        pageId: 'personal-center',
-        pageName: '个人中心 - 默认状态',
-        blocks: baseBlocks,
-      },
-      {
-        id: 'personal-center-not-logged-in',
-        pageId: 'personal-center',
-        pageName: '个人中心 - 未登录状态',
-        blocks: this.createPersonalCenterNotLoggedIn(platform),
-      },
-      {
-        id: 'personal-center-auth-modal',
-        pageId: 'personal-center',
-        pageName: '个人中心 - 微信授权弹窗',
-        blocks: [...this.createPersonalCenterNotLoggedIn(platform), ...this.createPersonalCenterAuthModal(platform)],
-      },
-      {
-        id: 'personal-center-logout-modal',
-        pageId: 'personal-center',
-        pageName: '个人中心 - 退出登录确认弹窗',
-        blocks: [...baseBlocks, ...this.createPersonalCenterLogoutModal(platform)],
-      },
-    ];
-  }
-
-  // 首页基础结构
-  private createHomePageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航菜单 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航菜单', actions: ['首页', '医生管理', '预约管理', '用户管理', '系统设置'] },
-          { id: 'b3', type: 'card', title: '数据概览', description: '今日预约数、医生数、用户数等核心指标', fields: ['今日预约', '在岗医生', '活跃用户'] },
-          { id: 'b4', type: 'table', title: '最新预约列表', description: '近期预约记录表格', fields: ['患者', '医生', '时间', '状态', '操作'] },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回按钮' },
-          { id: 'b2', type: 'banner', title: 'Banner轮播', description: '活动推广轮播图' },
-          { id: 'b3', type: 'nav', title: '服务入口', description: '快捷功能入口', actions: ['找医生', '我的预约', '健康资讯', '个人中心'] },
-          { id: 'b4', type: 'card', title: '推荐医生', description: '推荐医生卡片列表', children: [
-            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
-          ]},
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '状态栏', description: '手机状态栏 + 信号、电池' },
-          { id: 'b2', type: 'header', title: '原生导航栏', description: '页面标题 + 右侧操作' },
-          { id: 'b3', type: 'banner', title: 'Banner轮播', description: '运营活动推广' },
-          { id: 'b4', type: 'nav', title: '功能入口', description: '图标+文字快捷入口', actions: ['找医生', '预约挂号', '健康档案', '我的'] },
-          { id: 'b5', type: 'card', title: '推荐医生', description: '推荐医生列表', children: [
-            { id: 'b5-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
-          ]},
-          { id: 'b6', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '小程序导航栏', description: '自定义导航栏 + 标题' },
-          { id: 'b2', type: 'banner', title: 'Banner轮播', description: '活动推广' },
-          { id: 'b3', type: 'nav', title: '服务入口', description: '找医生、预约、咨询等入口', actions: ['找医生', '我的预约', '在线咨询'] },
-          { id: 'b4', type: 'card', title: '推荐医生', description: '推荐医生卡片列表', children: [
-            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
-          ]},
-          { id: 'b5', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
-        ];
-    }
-  }
-
-  private createHomePageEmptyState(platform: PlatformType): WireframeBlock[] {
-    return [
-      ...this.createHomePageBaseBlocks(platform).filter(b => b.type !== 'card'),
-      { id: 'empty', type: 'empty-state', title: '暂无推荐医生', description: '当前没有可推荐的医生，请稍后再试' },
-    ];
-  }
-
-  // 医生列表页基础结构
-  private createDoctorListPageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航', actions: ['首页', '医生管理', '预约管理'] },
-          { id: 'b3', type: 'form', title: '高级筛选', description: '多条件筛选医生', fields: ['科室', '职称', '擅长领域', '出诊状态'] },
-          { id: 'b4', type: 'table', title: '医生列表', description: '医生信息表格', fields: ['姓名', '科室', '职称', '擅长领域', '今日出诊', '操作'] },
-          { id: 'b5', type: 'nav', title: '分页器', description: '列表分页导航', actions: ['上一页', '1', '2', '3', '下一页'] },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
-          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生关键词', fields: ['搜索医生...'] },
-          { id: 'b3', type: 'tabs', title: '科室筛选', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
-          { id: 'b4', type: 'list', title: '医生卡片列表', description: '医生卡片列表', children: [
-            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
-          ]},
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题 + 搜索按钮' },
-          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生', fields: ['搜索医生...'] },
-          { id: 'b3', type: 'tabs', title: '科室 Tab', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
-          { id: 'b4', type: 'list', title: '医生列表', description: '医生卡片列表', children: [
-            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
-          ]},
-          { id: 'b5', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '医生列表' },
-          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生', fields: ['搜索关键词'] },
-          { id: 'b3', type: 'tabs', title: '科室筛选', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
-          { id: 'b4', type: 'list', title: '医生列表', description: '医生卡片列表', children: [
-            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
-          ]},
-          { id: 'b5', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
-        ];
-    }
-  }
-
-  private createDoctorListPageFilterSheet(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'filter-sheet', type: 'bottom-sheet', title: '科室筛选底部弹层', description: '选择科室筛选医生', fields: ['全部', '内科', '外科', '妇科', '儿科', '针灸科', '推拿科'] },
-    ];
-  }
-
-  private createDoctorListPageEmptyState(platform: PlatformType): WireframeBlock[] {
-    const baseBlocks = this.createDoctorListPageBaseBlocks(platform);
-    return [
-      ...baseBlocks.filter(b => !['list', 'table'].includes(b.type)),
-      { id: 'empty', type: 'empty-state', title: '暂无医生', description: '未找到符合条件的医生，请尝试其他筛选条件' },
-    ];
-  }
-
-  private createDoctorListPageFiltered(platform: PlatformType): WireframeBlock[] {
-    const baseBlocks = this.createDoctorListPageBaseBlocks(platform);
-    return [
-      ...baseBlocks.filter(b => b.type !== 'empty-state'),
-      { id: 'filter-active', type: 'text', title: '当前筛选', description: '已选择科室：内科' },
-    ];
-  }
-
-  private createDoctorListPageLoading(platform: PlatformType): WireframeBlock[] {
-    return [
-      ...this.createDoctorListPageBaseBlocks(platform).filter(b => !['list', 'table'].includes(b.type)),
-      { id: 'loading', type: 'text', title: '加载中', description: '正在加载医生列表...' },
-    ];
-  }
-
-  // 医生详情页基础结构
-  private createDoctorDetailPageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '页面导航' },
-          { id: 'b3', type: 'card', title: '医生详情卡片', description: '医生完整信息', fields: ['头像', '姓名', '职称', '科室', '擅长领域', '出诊时间', '简介'] },
-          { id: 'b4', type: 'table', title: '出诊时间表', description: '一周出诊时间安排', fields: ['日期', '上午', '下午', '晚上', '状态'] },
-          { id: 'b5', type: 'table', title: '用户评价列表', description: '历史评价', fields: ['患者', '评分', '评价内容', '日期'] },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
-          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
-          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
-          { id: 'b4', type: 'list', title: '出诊时间', description: '可预约时间段', children: [
-            { id: 'b4-1', type: 'card', title: '时间段卡片', fields: ['日期', '上午/下午', '剩余号源'] },
-          ]},
-          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '返回 + 分享按钮' },
-          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
-          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
-          { id: 'b4', type: 'list', title: '出诊时间', description: '可预约时间段' },
-          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '医生详情' },
-          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
-          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
-          { id: 'b4', type: 'table', title: '出诊时间', description: '出诊时间表', fields: ['日期', '时间段', '状态'] },
-          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
-        ];
-    }
-  }
-
-  private createDoctorDetailTimeSheet(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'timesheet-sheet', type: 'bottom-sheet', title: '预约时间选择底部弹层', description: '选择预约日期和时间段', fields: ['日期选择', '时间段列表', '上午 9:00-12:00 可约', '下午 14:00-17:00 可约', '晚上 18:00-21:00 已满'] },
-    ];
-  }
-
-  private createDoctorDetailAuthModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'auth-modal', type: 'modal', title: '授权弹窗', description: '需要授权获取手机号', actions: ['微信授权', '取消'] },
-    ];
-  }
-
-  private createDoctorDetailSuccessToast(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'success-toast', type: 'text', title: '预约成功', description: '您已成功预约，请按时就诊' },
-    ];
-  }
-
-  private createDoctorDetailNoTimeslot(platform: PlatformType): WireframeBlock[] {
-    const baseBlocks = this.createDoctorDetailPageBaseBlocks(platform);
-    return [
-      ...baseBlocks.filter(b => b.type !== 'list'),
-      { id: 'no-timeslot', type: 'empty-state', title: '暂无可预约时间', description: '该医生近期已约满，请关注下次放号通知' },
-    ];
-  }
-
-  // 预约确认页基础结构
-  private createBookingConfirmPageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '进度提示' },
-          { id: 'b3', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生姓名', '科室', '预约时间'] },
-          { id: 'b4', type: 'form', title: '就诊人信息表单', description: '填写就诊人信息', fields: ['姓名', '手机号', '身份证号', '病情描述'] },
-          { id: 'b5', type: 'table', title: '预约须知', description: '注意事项说明' },
-          { id: 'b6', type: 'button', title: '提交预约', description: '确认提交按钮' },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
-          { id: 'b2', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生', '时间'] },
-          { id: 'b3', type: 'form', title: '就诊人表单', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证'] },
-          { id: 'b4', type: 'form', title: '预约时间', description: '选择预约时间' },
-          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
-          { id: 'b6', type: 'button', title: '底部固定按钮', description: '提交预约按钮' },
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题 + 返回' },
-          { id: 'b2', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生', '时间'] },
-          { id: 'b3', type: 'form', title: '就诊人表单', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证'] },
-          { id: 'b4', type: 'form', title: '预约时间', description: '选择预约时间' },
-          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
-          { id: 'b6', type: 'bottom-sheet', title: '提交预约', description: '底部确认提交' },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '预约确认' },
-          { id: 'b2', type: 'form', title: '就诊人信息', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证号'] },
-          { id: 'b3', type: 'form', title: '预约时间', description: '选择预约时间', fields: ['日期', '时间段'] },
-          { id: 'b4', type: 'form', title: '症状描述', description: '填写症状', fields: ['症状描述'] },
-          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
-          { id: 'b6', type: 'button', title: '提交预约', description: '提交按钮' },
-        ];
-    }
-  }
-
-  private createBookingConfirmPatientSheet(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'patient-sheet', type: 'bottom-sheet', title: '就诊人选择底部弹层', description: '选择或新增就诊人', fields: ['就诊人1', '就诊人2', '新增就诊人'] },
-    ];
-  }
-
-  private createBookingConfirmTimeSheet(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'time-sheet', type: 'bottom-sheet', title: '时间选择底部弹层', description: '选择预约日期和时间段', fields: ['日期选择', '上午 9:00-12:00', '下午 14:00-17:00', '晚上 18:00-21:00'] },
-    ];
-  }
-
-  private createBookingConfirmValidationError(platform: PlatformType): WireframeBlock[] {
-    return [
-      ...this.createBookingConfirmPageBaseBlocks(platform).filter(b => b.type !== 'button'),
-      { id: 'error-tip', type: 'text', title: '表单错误提示', description: '请填写必填项：姓名、手机号' },
-      { id: 'submit-btn', type: 'button', title: '提交预约（禁用）', description: '提交按钮（因校验失败禁用）' },
-    ];
-  }
-
-  private createBookingConfirmSubmitting(platform: PlatformType): WireframeBlock[] {
-    return [
-      ...this.createBookingConfirmPageBaseBlocks(platform).filter(b => !['button', 'form'].includes(b.type)),
-      { id: 'submitting', type: 'text', title: '提交中', description: '正在提交预约，请稍候...' },
-    ];
-  }
-
-  private createBookingConfirmSuccessModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'success-modal', type: 'modal', title: '预约成功', description: '预约成功，请按时就诊', actions: ['查看我的预约', '返回首页'] },
-    ];
-  }
-
-  private createBookingConfirmFailedModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'failed-modal', type: 'modal', title: '预约失败', description: '预约提交失败，请重试', actions: ['重新提交', '返回修改'] },
-    ];
-  }
-
-  // 我的预约页基础结构
-  private createMyBookingsPageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航' },
-          { id: 'b3', type: 'form', title: '状态筛选', description: '多条件筛选', fields: ['预约状态', '日期范围', '医生'] },
-          { id: 'b4', type: 'table', title: '预约记录列表', description: '预约记录表格', fields: ['预约编号', '医生', '科室', '时间', '状态', '操作'] },
-          { id: 'b5', type: 'nav', title: '分页器', description: '列表分页', actions: ['上一页', '1', '2', '3', '下一页'] },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
-          { id: 'b2', type: 'tabs', title: '状态筛选', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
-          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
-            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '详情'] },
-          ]},
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题' },
-          { id: 'b2', type: 'tabs', title: '状态 Tab', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
-          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
-            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '改约', '详情'] },
-          ]},
-          { id: 'b4', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '我的预约' },
-          { id: 'b2', type: 'tabs', title: '状态 Tab', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
-          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
-            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '改约', '详情'] },
-          ]},
-          { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
-        ];
-    }
-  }
-
-  private createMyBookingsCancelModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'cancel-modal', type: 'modal', title: '取消预约确认', description: '确定要取消该预约吗？取消后不可恢复。', actions: ['确定取消', '返回'] },
-    ];
-  }
-
-  private createMyBookingsCancelSuccessToast(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'cancel-success-toast', type: 'text', title: '取消成功', description: '预约已成功取消' },
-    ];
-  }
-
-  private createMyBookingsRescheduleSheet(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'reschedule-sheet', type: 'bottom-sheet', title: '改约时间选择底部弹层', description: '选择新的预约时间', fields: ['日期选择', '时间段列表'] },
-    ];
-  }
-
-  private createMyBookingsEmptyState(platform: PlatformType): WireframeBlock[] {
-    const baseBlocks = this.createMyBookingsPageBaseBlocks(platform);
-    return [
-      ...baseBlocks.filter(b => !['list', 'table'].includes(b.type)),
-      { id: 'empty', type: 'empty-state', title: '暂无预约记录', description: '您还没有任何预约记录，快去预约一位医生吧' },
-    ];
-  }
-
-  // 个人中心页基础结构
-  private createPersonalCenterPageBaseBlocks(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航' },
-          { id: 'b3', type: 'card', title: '用户信息卡片', description: '用户头像、昵称、手机号', fields: ['头像', '昵称', '手机号'] },
-          { id: 'b4', type: 'nav', title: '功能菜单', description: '我的预约、我的收藏、设置等', actions: ['我的预约', '我的收藏', '设置', '退出登录'] },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题' },
-          { id: 'b2', type: 'card', title: '用户信息', description: '头像、昵称', fields: ['头像', '昵称', '手机号'] },
-          { id: 'b3', type: 'nav', title: '功能入口', description: '功能菜单', actions: ['我的预约', '我的收藏', '设置'] },
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题' },
-          { id: 'b2', type: 'card', title: '用户信息', description: '头像、昵称', fields: ['头像', '昵称', '手机号'] },
-          { id: 'b3', type: 'nav', title: '功能菜单', actions: ['我的预约', '我的收藏', '设置', '退出登录'] },
-          { id: 'b4', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '个人中心' },
-          { id: 'b2', type: 'card', title: '用户信息', description: '头像、昵称', fields: ['头像', '昵称', '手机号'] },
-          { id: 'b3', type: 'nav', title: '功能菜单', actions: ['我的预约', '我的收藏', '设置', '退出登录'] },
-          { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
-        ];
-    }
-  }
-
-  private createPersonalCenterNotLoggedIn(platform: PlatformType): WireframeBlock[] {
-    switch (platform) {
-      case 'web':
-        return [
-          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航' },
-          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航' },
-          { id: 'b3', type: 'empty-state', title: '未登录', description: '请先登录后查看个人中心' },
-        ];
-      case 'h5':
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题' },
-          { id: 'b2', type: 'empty-state', title: '未登录', description: '请先登录后查看个人中心' },
-        ];
-      case 'app':
-        return [
-          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题' },
-          { id: 'b2', type: 'empty-state', title: '未登录', description: '请先登录后查看个人中心' },
-          { id: 'b3', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
-        ];
-      case 'mini-program':
-      default:
-        return [
-          { id: 'b1', type: 'header', title: '顶部标题', description: '个人中心' },
-          { id: 'b2', type: 'empty-state', title: '未登录', description: '请先登录后查看个人中心' },
-          { id: 'b3', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
-        ];
-    }
-  }
-
-  private createPersonalCenterAuthModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'auth-modal', type: 'modal', title: '微信授权', description: '需要授权获取您的手机号', actions: ['微信授权', '暂不授权'] },
-    ];
-  }
-
-  private createPersonalCenterLogoutModal(platform: PlatformType): WireframeBlock[] {
-    return [
-      { id: 'logout-modal', type: 'modal', title: '退出登录确认', description: '确定要退出登录吗？', actions: ['确定退出', '取消'] },
-    ];
+    return wireframes;
   }
 
   async generatePRD(params: GeneratePRDParams): Promise<string> {
@@ -2163,5 +1551,267 @@ ${platform === 'web' ? `**Web 网页平台**：
         },
       ],
     };
+  }
+
+  private createPlatformHomePageBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航菜单 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航菜单', actions: ['首页', '医生管理', '预约管理', '用户管理', '系统设置'] },
+          { id: 'b3', type: 'card', title: '数据概览', description: '今日预约数、医生数、用户数等核心指标', fields: ['今日预约', '在岗医生', '活跃用户'] },
+          { id: 'b4', type: 'table', title: '最新预约列表', description: '近期预约记录表格', fields: ['患者', '医生', '时间', '状态', '操作'] },
+          { id: 'b5', type: 'modal', title: '新增预约弹窗', description: '新建预约表单弹窗' },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回按钮' },
+          { id: 'b2', type: 'banner', title: 'Banner轮播', description: '活动推广轮播图' },
+          { id: 'b3', type: 'nav', title: '服务入口', description: '快捷功能入口', actions: ['找医生', '我的预约', '健康资讯', '个人中心'] },
+          { id: 'b4', type: 'card', title: '推荐医生', description: '推荐医生卡片列表', children: [
+            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
+          ]},
+          { id: 'b5', type: 'button', title: '底部固定按钮', description: '悬浮快捷操作按钮' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '状态栏', description: '手机状态栏 + 信号、电池' },
+          { id: 'b2', type: 'header', title: '原生导航栏', description: '页面标题 + 右侧操作' },
+          { id: 'b3', type: 'banner', title: 'Banner轮播', description: '运营活动推广' },
+          { id: 'b4', type: 'nav', title: '功能入口', description: '图标+文字快捷入口', actions: ['找医生', '预约挂号', '健康档案', '我的'] },
+          { id: 'b5', type: 'card', title: '推荐医生', description: '推荐医生列表', children: [
+            { id: 'b5-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
+          ]},
+          { id: 'b6', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '小程序导航栏', description: '自定义导航栏 + 标题' },
+          { id: 'b2', type: 'banner', title: 'Banner轮播', description: '活动推广' },
+          { id: 'b3', type: 'nav', title: '服务入口', description: '找医生、预约、咨询等入口', actions: ['找医生', '我的预约', '在线咨询'] },
+          { id: 'b4', type: 'card', title: '推荐医生', description: '推荐医生卡片列表', children: [
+            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'] },
+          ]},
+          { id: 'b5', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
+        ];
+    }
+  }
+
+  private createPlatformDoctorListBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航', actions: ['首页', '医生管理', '预约管理'] },
+          { id: 'b3', type: 'form', title: '高级筛选', description: '多条件筛选医生', fields: ['科室', '职称', '擅长领域', '出诊状态'] },
+          { id: 'b4', type: 'table', title: '医生列表', description: '医生信息表格', fields: ['姓名', '科室', '职称', '擅长领域', '今日出诊', '操作'] },
+          { id: 'b5', type: 'nav', title: '分页器', description: '列表分页导航', actions: ['上一页', '1', '2', '3', '下一页'] },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
+          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生关键词', fields: ['搜索医生...'] },
+          { id: 'b3', type: 'tabs', title: '科室筛选', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
+          { id: 'b4', type: 'list', title: '医生卡片列表', description: '医生卡片列表', children: [
+            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
+          ]},
+          { id: 'b5', type: 'text', title: '底部加载更多', description: '上拉加载更多' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题 + 搜索按钮' },
+          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生', fields: ['搜索医生...'] },
+          { id: 'b3', type: 'tabs', title: '科室 Tab', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
+          { id: 'b4', type: 'list', title: '医生列表', description: '医生卡片列表', children: [
+            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
+          ]},
+          { id: 'b5', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题', description: '医生列表' },
+          { id: 'b2', type: 'form', title: '搜索框', description: '搜索医生', fields: ['搜索关键词'] },
+          { id: 'b3', type: 'tabs', title: '科室筛选', actions: ['全部', '内科', '外科', '妇科', '儿科'] },
+          { id: 'b4', type: 'list', title: '医生列表', description: '医生卡片列表', children: [
+            { id: 'b4-1', type: 'card', title: '医生卡片', fields: ['头像', '姓名', '职称', '擅长'], actions: ['预约'] },
+          ]},
+          { id: 'b5', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
+        ];
+    }
+  }
+
+  private createPlatformDoctorDetailBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '页面导航' },
+          { id: 'b3', type: 'card', title: '医生详情卡片', description: '医生完整信息', fields: ['头像', '姓名', '职称', '科室', '擅长领域', '出诊时间', '简介'] },
+          { id: 'b4', type: 'table', title: '出诊时间表', description: '一周出诊时间安排', fields: ['日期', '上午', '下午', '晚上', '状态'] },
+          { id: 'b5', type: 'table', title: '用户评价列表', description: '历史评价', fields: ['患者', '评分', '评价内容', '日期'] },
+          { id: 'b6', type: 'modal', title: '预约弹窗', description: '发起预约表单弹窗', fields: ['预约日期', '预约时间段', '就诊人', '联系电话', '症状描述'] },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
+          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
+          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
+          { id: 'b4', type: 'list', title: '出诊时间', description: '可预约时间段', children: [
+            { id: 'b4-1', type: 'card', title: '时间段卡片', fields: ['日期', '上午/下午', '剩余号源'] },
+          ]},
+          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
+          { id: 'b6', type: 'bottom-sheet', title: '预约底部弹层', description: '选择时间提交预约' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '原生导航栏', description: '返回 + 分享按钮' },
+          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
+          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
+          { id: 'b4', type: 'list', title: '出诊时间', description: '可预约时间段' },
+          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
+          { id: 'b6', type: 'bottom-sheet', title: '预约操作', description: '底部弹出预约操作' },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题', description: '医生详情' },
+          { id: 'b2', type: 'card', title: '医生资料', description: '医生基本信息', fields: ['头像', '姓名', '职称', '科室', '评分'] },
+          { id: 'b3', type: 'text', title: '擅长领域', description: '医生擅长领域介绍' },
+          { id: 'b4', type: 'table', title: '出诊时间', description: '出诊时间表', fields: ['日期', '时间段', '状态'] },
+          { id: 'b5', type: 'list', title: '用户评价', description: '评价列表' },
+          { id: 'b6', type: 'button', title: '立即预约', description: '发起预约按钮' },
+        ];
+    }
+  }
+
+  private createPlatformBookingConfirmBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '进度提示' },
+          { id: 'b3', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生姓名', '科室', '预约时间'] },
+          { id: 'b4', type: 'form', title: '就诊人信息表单', description: '填写就诊人信息', fields: ['姓名', '手机号', '身份证号', '病情描述'] },
+          { id: 'b5', type: 'table', title: '预约须知', description: '注意事项说明' },
+          { id: 'b6', type: 'button', title: '提交预约', description: '确认提交按钮' },
+          { id: 'b7', type: 'modal', title: '预约成功弹窗', description: '提交成功提示' },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
+          { id: 'b2', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生', '时间'] },
+          { id: 'b3', type: 'form', title: '就诊人表单', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证'] },
+          { id: 'b4', type: 'form', title: '预约时间', description: '选择预约时间' },
+          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
+          { id: 'b6', type: 'button', title: '底部固定按钮', description: '提交预约按钮' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题 + 返回' },
+          { id: 'b2', type: 'card', title: '医生信息', description: '预约医生信息', fields: ['医生', '时间'] },
+          { id: 'b3', type: 'form', title: '就诊人表单', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证'] },
+          { id: 'b4', type: 'form', title: '预约时间', description: '选择预约时间' },
+          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
+          { id: 'b6', type: 'bottom-sheet', title: '提交预约', description: '底部确认提交' },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题', description: '预约确认' },
+          { id: 'b2', type: 'form', title: '就诊人信息', description: '填写就诊人信息', fields: ['姓名', '电话', '身份证号'] },
+          { id: 'b3', type: 'form', title: '预约时间', description: '选择预约时间', fields: ['日期', '时间段'] },
+          { id: 'b4', type: 'form', title: '症状描述', description: '填写症状', fields: ['症状描述'] },
+          { id: 'b5', type: 'text', title: '预约须知', description: '预约相关说明' },
+          { id: 'b6', type: 'button', title: '提交预约', description: '提交按钮' },
+        ];
+    }
+  }
+
+  private createPlatformMyBookingsBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '功能导航' },
+          { id: 'b3', type: 'form', title: '状态筛选', description: '多条件筛选', fields: ['预约状态', '日期范围', '医生'] },
+          { id: 'b4', type: 'table', title: '预约记录列表', description: '预约记录表格', fields: ['预约编号', '医生', '科室', '时间', '状态', '操作'] },
+          { id: 'b5', type: 'nav', title: '分页器', description: '列表分页', actions: ['上一页', '1', '2', '3', '下一页'] },
+          { id: 'b6', type: 'modal', title: '取消确认弹窗', description: '取消预约确认' },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '页面标题 + 返回' },
+          { id: 'b2', type: 'tabs', title: '状态筛选', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
+          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
+            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '详情'] },
+          ]},
+          { id: 'b4', type: 'text', title: '底部加载更多', description: '上拉加载' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '原生导航栏', description: '页面标题' },
+          { id: 'b2', type: 'tabs', title: '状态 Tab', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
+          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
+            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '详情'] },
+          ]},
+          { id: 'b4', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题', description: '我的预约' },
+          { id: 'b2', type: 'tabs', title: '状态筛选', actions: ['全部', '待确认', '已确认', '已完成', '已取消'] },
+          { id: 'b3', type: 'list', title: '预约列表', description: '预约记录列表', children: [
+            { id: 'b3-1', type: 'card', title: '预约卡片', fields: ['医生', '时间', '状态'], actions: ['取消', '改约', '详情'] },
+          ]},
+          { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
+        ];
+    }
+  }
+
+  private createPlatformPersonalCenterBlocks(platform: PlatformType): WireframeBlock[] {
+    switch (platform) {
+      case 'web':
+        return [
+          { id: 'b1', type: 'header', title: '顶部导航', description: 'Logo + 主导航 + 用户信息' },
+          { id: 'b2', type: 'nav', title: '侧边栏', description: '个人中心菜单', actions: ['个人信息', '修改密码', '预约管理', '消息通知', '系统设置', '退出登录'] },
+          { id: 'b3', type: 'card', title: '用户信息卡片', description: '用户基本信息', fields: ['头像', '姓名', '手机号', '角色', '注册时间'] },
+          { id: 'b4', type: 'table', title: '快捷操作记录', description: '最近操作', fields: ['操作类型', '时间', '状态'] },
+          { id: 'b5', type: 'modal', title: '编辑信息弹窗', description: '编辑个人信息' },
+        ];
+      case 'h5':
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题栏', description: '个人中心' },
+          { id: 'b2', type: 'card', title: '用户信息', description: '用户头像和昵称', fields: ['头像', '昵称', '手机号'] },
+          { id: 'b3', type: 'list', title: '功能入口', description: '常用功能入口', children: [
+            { id: 'b3-1', type: 'card', title: '我的预约', actions: ['查看'] },
+            { id: 'b3-2', type: 'card', title: '我的收藏', actions: ['查看'] },
+            { id: 'b3-3', type: 'card', title: '消息通知', actions: ['查看'] },
+            { id: 'b3-4', type: 'card', title: '设置', actions: ['查看'] },
+          ]},
+          { id: 'b4', type: 'button', title: '底部退出按钮', description: '退出登录' },
+        ];
+      case 'app':
+        return [
+          { id: 'b1', type: 'header', title: '原生导航栏', description: '设置按钮' },
+          { id: 'b2', type: 'card', title: '用户信息', description: '用户头像和昵称', fields: ['头像', '昵称', '手机号'] },
+          { id: 'b3', type: 'nav', title: '功能菜单', description: '个人中心菜单', actions: ['我的预约', '健康档案', '收藏医生', '消息通知', '设置', '帮助反馈'] },
+          { id: 'b4', type: 'tabs', title: '底部 Tab', actions: ['首页', '找医生', '预约', '我的'] },
+        ];
+      case 'mini-program':
+      default:
+        return [
+          { id: 'b1', type: 'header', title: '顶部标题', description: '个人中心' },
+          { id: 'b2', type: 'card', title: '用户信息', description: '用户头像和昵称', fields: ['头像', '昵称', '手机号'] },
+          { id: 'b3', type: 'list', title: '功能入口', description: '常用功能入口', children: [
+            { id: 'b3-1', type: 'card', title: '我的预约', actions: ['查看'] },
+            { id: 'b3-2', type: 'card', title: '我的收藏', actions: ['查看'] },
+            { id: 'b3-3', type: 'card', title: '设置', actions: ['查看'] },
+          ]},
+          { id: 'b4', type: 'tabs', title: '底部导航', actions: ['首页', '医生', '预约', '我的'] },
+        ];
+    }
   }
 }

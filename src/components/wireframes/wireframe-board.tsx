@@ -43,9 +43,9 @@ export function WireframeBoard({
       {/* 顶部工具栏 */}
       <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0">
         <div className="flex items-center gap-4">
-          <Link href={`/projects/${projectId}/flows`}>
-            <Button variant="outline" size="sm">返回跳转关系</Button>
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/projects/${projectId}/flows`}>返回跳转关系</Link>
+          </Button>
           <div className="flex items-center gap-2">
             <span className="text-base font-semibold text-slate-800">
               {projectName}
@@ -59,9 +59,9 @@ export function WireframeBoard({
           <Button variant="outline" size="sm" onClick={onSave}>
             保存线框图
           </Button>
-          <Link href={`/projects/${projectId}/prd`}>
-            <Button size="sm">下一步：生成 PRD</Button>
-          </Link>
+          <Button size="sm" asChild>
+            <Link href={`/projects/${projectId}/prd`}>下一步：生成 PRD</Link>
+          </Button>
         </div>
       </header>
 

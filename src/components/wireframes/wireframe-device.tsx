@@ -8,14 +8,114 @@ interface WireframeDeviceProps {
   platform: string;
 }
 
-// 检查 block 是否有指定 actions
-function hasActions(block: WireframeBlock, actionList: string[]): boolean {
-  return block.actions?.some((a: string) => actionList.includes(a)) ?? false;
+// ============================================================
+// Helper 函数：判断 Block 类型
+// ============================================================
+
+// 判断是否为底部 TabBar block
+function isBottomTabBlock(block: WireframeBlock): boolean {
+  if (block.type !== 'tabs') return false;
+  const title = (block.title || '').toLowerCase();
+
+  // title 包含底部/TabBar/底部导航/底部 Tab 才认为是 TabBar
+  return (
+    title.includes('底部') ||
+    title.includes('tabbar') ||
+    title.includes('底部导航') ||
+    title.includes('底部 tab')
+  );
 }
 
-// 检查是否有指定类型的 block 且该 block 有指定 actions
-function hasBlockWithActions(blocks: WireframeBlock[], type: string, actionList: string[]): boolean {
-  return blocks.some(b => b.type === type && hasActions(b, actionList));
+// 统一的底部 TabBar 获取函数
+function getBottomTabBlock(blocks: WireframeBlock[]): WireframeBlock | undefined {
+  return blocks.find(block => isBottomTabBlock(block));
+}
+
+// 判断是否为 header block（设备层已渲染）
+function isHeaderBlock(block: WireframeBlock): boolean {
+  return block.type === 'header';
+}
+
+// 判断是否为 Web 侧边栏 nav block（收紧规则）
+function isWebSidebarNavBlock(block: WireframeBlock): boolean {
+  if (block.type !== 'nav') return false;
+  const title = (block.title || '').toLowerCase();
+
+  // title 明确包含以下词才是侧边栏
+  return (
+    title.includes('侧边栏') ||
+    title.includes('菜单') ||
+    title.includes('功能导航') ||
+    title.includes('页面导航') ||
+    title.includes('管理菜单') ||
+    title.includes('左侧导航')
+  );
+}
+
+// 判断是否为服务入口 nav block（应保留在内容区）
+function isServiceEntryBlock(block: WireframeBlock): boolean {
+  if (block.type !== 'nav') return false;
+  const title = (block.title || '').toLowerCase();
+  return (
+    title.includes('服务入口') ||
+    title.includes('快捷入口') ||
+    title.includes('功能入口') ||
+    title.includes('应用入口')
+  );
+}
+
+// 判断普通 tabs 是否应保留在内容区
+function shouldKeepTabsInContent(block: WireframeBlock): boolean {
+  if (block.type !== 'tabs') return false;
+  const title = (block.title || '').toLowerCase();
+  return (
+    title.includes('科室') ||
+    title.includes('状态') ||
+    title.includes('筛选') ||
+    title.includes('分类') ||
+    title.includes('日期')
+  );
+}
+
+// H5 内容区过滤规则 - 只过滤设备层已渲染的 block
+function getH5ContentBlocks(blocks: WireframeBlock[]): WireframeBlock[] {
+  const bottomTabBlock = getBottomTabBlock(blocks);
+  return blocks.filter(block =>
+    !isHeaderBlock(block) &&
+    block.id !== bottomTabBlock?.id
+  );
+}
+
+// App 内容区过滤规则 - 只过滤设备层已渲染的 block
+function getAppContentBlocks(blocks: WireframeBlock[]): WireframeBlock[] {
+  const bottomTabBlock = getBottomTabBlock(blocks);
+  return blocks.filter(block =>
+    !isHeaderBlock(block) &&
+    block.id !== bottomTabBlock?.id
+  );
+}
+
+// 小程序内容区过滤规则 - 只过滤设备层已渲染的 block
+function getMiniProgramContentBlocks(blocks: WireframeBlock[]): WireframeBlock[] {
+  const bottomTabBlock = getBottomTabBlock(blocks);
+  return blocks.filter(block =>
+    !isHeaderBlock(block) &&
+    block.id !== bottomTabBlock?.id
+  );
+}
+
+// Web 主内容区过滤规则 - 只过滤侧边栏 block by id
+function getWebContentBlocks(blocks: WireframeBlock[]): WireframeBlock[] {
+  const sidebarBlock = blocks.find(b => b.type === 'nav' && isWebSidebarNavBlock(b));
+  return blocks.filter(block =>
+    !(block.type === 'nav' && isWebSidebarNavBlock(block)) ||
+    (sidebarBlock && block.id !== sidebarBlock.id)
+  );
+}
+
+// 获取 Web 侧边栏 block
+function getWebSidebarBlock(blocks: WireframeBlock[]): WireframeBlock | undefined {
+  return blocks.find(b => b.type === 'nav' && isWebSidebarNavBlock(b));
 }
 
 export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
@@ -40,45 +140,44 @@ export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
 
         {/* 桌面端布局：侧边栏 + 主内容区 */}
         <div className="flex h-[600px]">
-          {/* 侧边栏 */}
-          {hasBlockWithActions(wireframe.blocks, 'nav', ['首页', '医生管理', '预约管理', '用户管理', '系统设置']) && (
-            <div className="w-56 bg-slate-50 border-r border-slate-200 p-3 overflow-y-auto">
-              <div className="mb-3 pb-2 border-b border-slate-200">
-                <span className="text-sm font-semibold text-slate-700">导航菜单</span>
+          {/* 侧边栏 - 使用真实的 sidebarBlock.actions */}
+          {(() => {
+            const sidebarBlock = getWebSidebarBlock(wireframe.blocks);
+            if (!sidebarBlock) return null;
+            const actions = sidebarBlock.actions || [];
+            return (
+              <div className="w-56 bg-slate-50 border-r border-slate-200 p-3 overflow-y-auto">
+                <div className="mb-3 pb-2 border-b border-slate-200">
+                  <span className="text-sm font-semibold text-slate-700">{sidebarBlock.title || '导航菜单'}</span>
+                </div>
+                <div className="mb-1">
+                  {actions.length > 0 ? (
+                    actions.map((action: string, i: number) => (
+                      <div
+                        key={i}
+                        className={`px-3 py-2 rounded text-sm ${i === 0 ? 'bg-slate-200 text-slate-900 font-medium' : 'text-slate-600 hover:bg-slate-100'
+                          }`}
+                      >
+                        {action}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-slate-600">{sidebarBlock.title}</div>
+                  )}
+                </div>
               </div>
-              {wireframe.blocks
-                .filter(b => b.type === 'nav' && hasActions(b, ['首页', '医生管理', '预约管理', '用户管理', '系统设置']))
-                .map((block) => (
-                  <div key={block.id} className="mb-1">
-                    {block.actions && block.actions.length > 0 ? (
-                      block.actions.map((action: string, i: number) => (
-                        <div
-                          key={i}
-                          className={`px-3 py-2 rounded text-sm ${i === 0 ? 'bg-slate-200 text-slate-900 font-medium' : 'text-slate-600 hover:bg-slate-100'
-                            }`}
-                        >
-                          {action}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="px-3 py-2 text-sm text-slate-600">{block.title}</div>
-                    )}
-                  </div>
-                ))}
-            </div>
-          )}
+            );
+          })()}
 
-          {/* 主内容区 */}
+          {/* 主内容区 - 使用通用过滤规则 */}
           <div className="flex-1 p-4 overflow-y-auto bg-slate-100">
             <div className="mb-3 pb-2 border-b border-slate-200">
               <span className="text-base font-semibold text-slate-700">{wireframe.pageName}</span>
             </div>
             <div className="space-y-2">
-              {wireframe.blocks
-                .filter(b => b.type !== 'nav' || !hasActions(b, ['首页', '医生管理', '预约管理', '用户管理', '系统设置']))
-                .map((block) => (
-                  <WireframeBlockRenderer key={block.id} block={block} platform={platform} />
-                ))}
+              {getWebContentBlocks(wireframe.blocks).map((block) => (
+                <WireframeBlockRenderer key={block.id} block={block} platform={platform} />
+              ))}
             </div>
           </div>
         </div>
@@ -88,6 +187,8 @@ export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
 
   // H5 手机网页设备
   if (platform === 'h5') {
+    const bottomTabBlock = getBottomTabBlock(wireframe.blocks);
+
     return (
       <div className="w-[390px] min-h-[720px] bg-white rounded-[32px] border border-slate-300 shadow-[0_24px_60px_rgba(15,23,42,0.16)] overflow-hidden relative">
         {/* H5 顶部标题栏 */}
@@ -95,29 +196,31 @@ export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
           <span className="text-sm font-medium text-slate-800">{wireframe.pageName}</span>
         </div>
 
-        {/* 内容区 */}
-        <div className="bg-slate-50 min-h-[668px] overflow-y-auto pb-4">
+        {/* 内容区 - 过滤掉 bottomTabBlock */}
+        <div className={`bg-slate-50 overflow-y-auto ${bottomTabBlock ? 'min-h-[580px]' : 'min-h-[668px]'}`}>
           <div className="space-y-0">
-            {wireframe.blocks.map((block) => (
-              <div key={block.id} className="relative">
-                <WireframeBlockRenderer block={block} platform={platform} />
-                {block.type === 'bottom-sheet' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-[180px] bg-white border-t border-slate-200 rounded-t-3xl shadow-lg">
-                    <div className="flex justify-center pt-2">
-                      <div className="w-8 h-1 bg-slate-300 rounded" />
-                    </div>
-                    <div className="px-4 py-3">
-                      <span className="text-sm font-medium text-slate-700">{block.title || '底部弹层'}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {getH5ContentBlocks(wireframe.blocks).map((block) => (
+              <WireframeBlockRenderer key={block.id} block={block} platform={platform} />
             ))}
           </div>
         </div>
 
-        {/* 底部安全区提示 */}
-        <div className="absolute bottom-0 left-0 right-0 h-8 bg-white rounded-b-[32px]" />
+        {/* H5 底部 TabBar - 使用真实的 bottomTabBlock.actions */}
+        {bottomTabBlock && bottomTabBlock.actions && bottomTabBlock.actions.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-14 bg-white border-t border-slate-200 flex items-center justify-around px-4">
+            {bottomTabBlock.actions.map((tab: string, i: number) => (
+              <div key={i} className={`flex flex-col items-center ${i === 0 ? 'text-sky-600' : 'text-slate-400'}`}>
+                <div className={`w-6 h-6 rounded ${i === 0 ? 'bg-sky-100' : 'bg-slate-100'}`} />
+                <span className="text-xs mt-1">{tab}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 底部安全区提示 - 仅在没有 TabBar 时显示 */}
+        {!bottomTabBlock && (
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-white rounded-b-[32px]" />
+        )}
       </div>
     );
   }
@@ -150,49 +253,27 @@ export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
         {/* 内容区 */}
         <div className="bg-slate-50 min-h-[568px] overflow-y-auto">
           <div className="space-y-0">
-            {wireframe.blocks
-              .filter(b => b.type !== 'header')
-              .map((block) => (
-                <div key={block.id} className="relative">
-                  <WireframeBlockRenderer block={block} platform={platform} />
-                  {block.type === 'bottom-sheet' && (
-                    <div className="absolute bottom-0 left-0 right-0 h-[180px] bg-white border-t border-slate-200 rounded-t-3xl shadow-lg">
-                      <div className="flex justify-center pt-2">
-                        <div className="w-8 h-1 bg-slate-300 rounded" />
-                      </div>
-                      <div className="px-4 py-3">
-                        <span className="text-sm font-medium text-slate-700">{block.title || '底部弹层'}</span>
-                      </div>
-                    </div>
-                  )}
-                  {block.type === 'modal' && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                      <div className="bg-white rounded-xl border border-slate-200 shadow-xl w-4/5">
-                        <div className="px-4 py-3 border-b border-slate-100">
-                          <span className="text-sm font-medium text-slate-700">{block.title || '弹窗'}</span>
-                        </div>
-                        <div className="p-4">
-                          <p className="text-xs text-slate-400 mb-3">{block.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+            {getAppContentBlocks(wireframe.blocks).map((block) => (
+              <WireframeBlockRenderer key={block.id} block={block} platform={platform} />
+            ))}
           </div>
         </div>
 
-        {/* 底部 TabBar */}
-        {hasBlockWithActions(wireframe.blocks, 'tabs', ['首页', '找医生', '预约', '我的']) && (
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-around px-4">
-            {['首页', '找医生', '预约', '我的'].map((tab, i) => (
-              <div key={tab} className={`flex flex-col items-center ${i === 0 ? 'text-blue-600' : 'text-slate-400'}`}>
-                <div className={`w-6 h-6 rounded ${i === 0 ? 'bg-blue-100' : 'bg-slate-100'}`} />
-                <span className="text-xs mt-1">{tab}</span>
-              </div>
-            ))}
-          </div>
-        )}
+        {/* 底部 TabBar - 使用真实的 block.actions */}
+        {getBottomTabBlock(wireframe.blocks) && (() => {
+          const bottomTab = getBottomTabBlock(wireframe.blocks)!;
+          const tabs = bottomTab.actions || [];
+          return (
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-white border-t border-slate-200 flex items-center justify-around px-4">
+              {tabs.map((tab: string, i: number) => (
+                <div key={tab} className={`flex flex-col items-center ${i === 0 ? 'text-blue-600' : 'text-slate-400'}`}>
+                  <div className={`w-6 h-6 rounded ${i === 0 ? 'bg-blue-100' : 'bg-slate-100'}`} />
+                  <span className="text-xs mt-1">{tab}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -208,37 +289,29 @@ export function WireframeDevice({ wireframe, platform }: WireframeDeviceProps) {
       {/* 内容区 */}
       <div className="bg-slate-50 min-h-[600px] overflow-y-auto">
         <div className="space-y-0">
-          {wireframe.blocks.map((block) => (
-            <div key={block.id} className="relative">
-              <WireframeBlockRenderer block={block} platform={platform} />
-              {block.type === 'bottom-sheet' && (
-                <div className="absolute bottom-0 left-0 right-0 h-[180px] bg-white border-t border-slate-200 rounded-t-3xl shadow-lg">
-                  <div className="flex justify-center pt-2">
-                    <div className="w-8 h-1 bg-slate-300 rounded" />
-                  </div>
-                  <div className="px-4 py-3">
-                    <span className="text-sm font-medium text-slate-700">{block.title || '底部弹层'}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+          {getMiniProgramContentBlocks(wireframe.blocks).map((block) => (
+            <WireframeBlockRenderer key={block.id} block={block} platform={platform} />
           ))}
         </div>
       </div>
 
-      {/* 小程序 TabBar */}
-      {hasBlockWithActions(wireframe.blocks, 'tabs', ['首页', '医生', '预约', '我的']) && (
-        <div className="absolute bottom-0 left-0 right-0 h-[68px] bg-white border-t border-slate-200 pt-2">
-          <div className="flex justify-around">
-            {['首页', '医生', '预约', '我的'].map((tab, i) => (
-              <div key={tab} className={`flex flex-col items-center ${i === 0 ? 'text-green-600' : 'text-slate-400'}`}>
-                <div className={`w-5 h-5 rounded-full ${i === 0 ? 'bg-green-100' : 'bg-slate-100'}`} />
-                <span className="text-xs mt-1">{tab}</span>
-              </div>
-            ))}
+      {/* 小程序 TabBar - 使用真实的 block.actions */}
+      {getBottomTabBlock(wireframe.blocks) && (() => {
+        const bottomTab = getBottomTabBlock(wireframe.blocks)!;
+        const tabs = bottomTab.actions || [];
+        return (
+          <div className="absolute bottom-0 left-0 right-0 h-[68px] bg-white border-t border-slate-200 pt-2">
+            <div className="flex justify-around">
+              {tabs.map((tab: string, i: number) => (
+                <div key={tab} className={`flex flex-col items-center ${i === 0 ? 'text-green-600' : 'text-slate-400'}`}>
+                  <div className={`w-5 h-5 rounded-full ${i === 0 ? 'bg-green-100' : 'bg-slate-100'}`} />
+                  <span className="text-xs mt-1">{tab}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
