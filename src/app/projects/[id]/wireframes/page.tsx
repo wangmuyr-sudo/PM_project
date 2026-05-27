@@ -78,6 +78,7 @@ export default function WireframesPage() {
       const wireframes = await ai.generateWireframes({
         featureTree: project.featureTree,
         pageList: project.pageList,
+        platform: project.platform,
       });
       setWireframeList(wireframes);
       // 保存到 Store，同时清空下游 PRD 和研发说明
@@ -202,17 +203,120 @@ export default function WireframesPage() {
     );
   };
 
-  // 渲染页面线框图（手机容器样式）
-  const renderMobileWireframe = (wireframe: WireframePage) => {
+  // 渲染页面线框图（根据平台使用不同容器）
+  const renderWireframe = (wireframe: WireframePage) => {
+    const platform = project?.platform || 'mini-program';
+
+    // Web 桌面端容器
+    if (platform === 'web') {
+      return (
+        <div key={wireframe.id} className="flex-shrink-0">
+          <div className="text-center mb-2 font-medium">{wireframe.pageName}</div>
+          <div className="w-[720px] border-2 border-gray-800 rounded-lg bg-white overflow-hidden">
+            <div className="h-full flex flex-row">
+              {/* 模拟侧边栏 */}
+              {wireframe.blocks.some(b => b.type === 'nav' && b.description?.includes('侧边栏')) && (
+                <div className="w-48 border-r border-gray-300 bg-gray-100 p-2">
+                  {wireframe.blocks.filter(b => b.type === 'nav' && b.description?.includes('侧边栏')).map((block) => (
+                    <div key={block.id} className="border border-gray-400 rounded bg-gray-50 p-1 mb-1">
+                      <span className="text-xs font-medium">{block.title}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* 主内容区 */}
+              <div className="flex-1 p-3 overflow-y-auto" style={{ maxHeight: '400px' }}>
+                {wireframe.blocks.filter(b => b.type !== 'nav' || !b.description?.includes('侧边栏')).map((block) => renderDesktopBlock(block))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // H5 手机网页容器
+    if (platform === 'h5') {
+      return (
+        <div key={wireframe.id} className="flex-shrink-0">
+          <div className="text-center mb-2 font-medium">{wireframe.pageName}</div>
+          <div className="w-[360px] border-2 border-gray-800 rounded-lg bg-white overflow-hidden">
+            <div className="h-full flex flex-col">
+              {wireframe.blocks.map((block) => renderMobileBlock(block))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // App 原生手机容器
+    if (platform === 'app') {
+      return (
+        <div key={wireframe.id} className="flex-shrink-0">
+          <div className="text-center mb-2 font-medium">{wireframe.pageName}</div>
+          <div className="w-[360px] border-2 border-gray-800 rounded-lg overflow-hidden">
+            {/* 模拟状态栏 */}
+            <div className="h-6 bg-black"></div>
+            {/* 模拟原生导航栏 */}
+            <div className="h-10 bg-gray-200 flex items-center px-3">
+              <span className="text-sm font-medium">{wireframe.pageName}</span>
+            </div>
+            {/* 内容区 */}
+            <div className="bg-white">
+              {wireframe.blocks.filter(b => b.type !== 'header').map((block) => renderMobileBlock(block))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 小程序默认手机容器
     return (
       <div key={wireframe.id} className="flex-shrink-0">
         <div className="text-center mb-2 font-medium">{wireframe.pageName}</div>
-        {/* 手机屏幕容器 */}
         <div className="w-[360px] border-2 border-gray-800 rounded-lg bg-white overflow-hidden">
           <div className="h-full flex flex-col">
             {wireframe.blocks.map((block) => renderMobileBlock(block))}
           </div>
         </div>
+      </div>
+    );
+  };
+
+  // 渲染桌面端 block
+  const renderDesktopBlock = (block: WireframeBlock, depth = 0) => {
+    const marginLeft = depth > 0 ? 'ml-2' : '';
+    const heightClass = block.children ? 'min-h-[40px]' : '';
+
+    return (
+      <div key={block.id} className={`${marginLeft}`}>
+        <div className={`border border-gray-400 rounded bg-gray-50 p-2 mb-1 ${heightClass}`}>
+          <div className="flex items-center gap-1 mb-1">
+            <span className="text-xs text-gray-500">[{block.type}]</span>
+            <span className="text-xs font-medium">{block.title}</span>
+          </div>
+          {block.fields && block.fields.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {block.fields.map((field, i) => (
+                <span key={i} className="text-xs bg-gray-200 text-gray-600 px-1 rounded">[{field}]</span>
+              ))}
+            </div>
+          )}
+          {block.actions && block.actions.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {block.actions.map((action, i) => (
+                <span key={i} className="text-xs bg-blue-100 text-blue-700 px-1 rounded border border-blue-300">{action}</span>
+              ))}
+            </div>
+          )}
+          {block.description && !block.fields && !block.actions && (
+            <p className="text-xs text-gray-400">{block.description}</p>
+          )}
+        </div>
+        {block.children && block.children.length > 0 && (
+          <div className="mt-1">
+            {block.children.map((child) => renderDesktopBlock(child, depth + 1))}
+          </div>
+        )}
       </div>
     );
   };
@@ -227,6 +331,9 @@ export default function WireframesPage() {
               <Button variant="outline">返回跳转关系</Button>
             </Link>
             <h1 className="text-xl font-semibold">{project.name} - 线框图</h1>
+            <Badge variant="outline" className="ml-2">
+              当前平台：{project.platform === 'web' ? 'Web 网页' : project.platform === 'h5' ? 'H5' : project.platform === 'app' ? 'App' : '小程序'}
+            </Badge>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={handleSave} variant="outline">保存线框图</Button>
@@ -287,7 +394,7 @@ export default function WireframesPage() {
 
             {/* 线框图列表（横向滚动） */}
             <div className="flex gap-6 overflow-x-auto pb-4">
-              {wireframeList.map((wireframe) => renderMobileWireframe(wireframe))}
+              {wireframeList.map((wireframe) => renderWireframe(wireframe))}
             </div>
 
             {wireframeList.length === 0 && (

@@ -100,7 +100,8 @@ export default function HandoffPage() {
         pageList: project.pageList,
         flows: project.flows,
         prd: project.prd,
-        project: { name: project.name },
+        project: { name: project.name, platform: project.platform },
+        platform: project.platform,
       });
       setDevHandoffContent(devHandoff);
       // 保存到 Store

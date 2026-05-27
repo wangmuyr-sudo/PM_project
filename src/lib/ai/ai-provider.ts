@@ -11,6 +11,7 @@ import type {
   WireframePage,
   Project,
   FeatureNode,
+  PlatformType,
 } from "../types";
 
 /**
@@ -85,6 +86,8 @@ export interface GenerateWireframesParams {
   featureTree: FeatureTree;
   /** 页面清单 */
   pageList: ProductPage[];
+  /** 平台类型 */
+  platform?: PlatformType;
 }
 
 /**
@@ -101,6 +104,8 @@ export interface GeneratePRDParams {
   wireframes: WireframePage[];
   /** 项目信息 */
   project: Partial<Project>;
+  /** 平台类型 */
+  platform?: PlatformType;
 }
 
 /**
@@ -117,6 +122,8 @@ export interface GenerateDevHandoffParams {
   prd: string;
   /** 项目信息 */
   project: Partial<Project>;
+  /** 平台类型 */
+  platform?: PlatformType;
 }
 
 /**

@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <body className="min-h-screen bg-[#F8FAFC] antialiased">
+      <body className="min-h-screen bg-[#F8FAFC] text-[#0F172A] antialiased">
         <Inspector keys={['control', 'shift', 'command']}>{children}</Inspector>
       </body>
     </html>

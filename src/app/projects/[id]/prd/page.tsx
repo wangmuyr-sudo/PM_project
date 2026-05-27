@@ -90,7 +90,8 @@ export default function PRDPage() {
         pageList: project.pageList,
         flows: project.flows,
         wireframes: project.wireframes,
-        project: { name: project.name },
+        project: { name: project.name, platform: project.platform },
+        platform: project.platform,
       });
       setPrdContent(prd);
       // 保存到 Store，同时清空下游研发说明
